@@ -1,67 +1,609 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.4">
-  <style type="text/css">
-    body {background-color: #efece4}
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 24.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18; min-height: 15.0px}
-    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #0000e9; -webkit-text-stroke: #0000e9}
-    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18}
-    p.p5 {margin: 0.0px 0.0px 12.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18}
-    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18}
-    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; font: 8.4px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18}
-    span.s1 {font-kerning: none; background-color: #efece4}
-    span.s2 {font-kerning: none}
-    span.s3 {text-decoration: underline ; font-kerning: none}
-    span.s4 {font-kerning: none; color: #1f1d18; -webkit-text-stroke: 0px #1f1d18}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPOCH & AURA | Scottsdale</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Libraries -->
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Mulish:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --stone: #F2F0E9; /* Travertine */
+            --ash: #2A2620; /* Volcanic Rock */
+            --sand: #B09B82; /* Wet Sand */
+            --white: #FFFFFF;
+        }
+
+        body {
+            background-color: var(--stone);
+            color: var(--ash);
+            font-family: 'Mulish', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .font-decorative {
+            font-family: 'Cinzel Decorative', serif;
+        }
+
+        /* WEBGL CANVAS (Background Texture) */
+        #webgl {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.6; /* Subtle texture blending */
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        /* UTILS */
+        .wrapper {
+            position: relative;
+            z-index: 10;
+        }
+
+        .container-fluid {
+            padding-left: 4vw;
+            padding-right: 4vw;
+        }
+
+        /* MASK FIX: Added padding-bottom to prevent descender clipping */
+        .overflow-fix {
+            overflow: hidden;
+            padding-bottom: 0.5em; 
+            margin-bottom: -0.5em;
+        }
+
+        /* IMAGES */
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            background: #dcdad4;
+            transition: box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.0);
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* Protocol Card Physics (Revised for "Zoom Toward User") */
+        .protocol-card {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .protocol-card:hover {
+            transform: translateY(-10px); /* Lift Card */
+            z-index: 20;
+        }
+        .protocol-card:hover .img-container {
+            /* Deep, diffuse shadow behind the photo */
+            box-shadow: 0 25px 50px -12px rgba(42, 38, 32, 0.4); 
+        }
+        .protocol-card:hover .img-container img {
+            transform: scale(1.1); /* Zoom Image In */
+        }
+
+        /* NAVIGATION */
+        .nav-item {
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--ash);
+            display: inline-block;
+        }
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0%;
+            height: 1px;
+            background: var(--ash);
+            transition: width 0.4s ease;
+        }
+        .nav-item:hover::before {
+            width: 100%;
+        }
+
+        /* BUTTONS */
+        .btn-arch {
+            border: 1px solid var(--ash);
+            padding: 1rem 3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.7rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            color: var(--ash);
+            background: transparent;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-arch:hover {
+            background: var(--ash);
+            color: var(--stone);
+        }
+
+        /* SCROLL BAR HIDDEN */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        /* LOADER */
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: #F2F0E9;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .loader-logo {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 2rem;
+            color: var(--ash);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+    </style>
 </head>
-<body>
-<p class="p1"><span class="s1">EPOCH &amp; AURA</span></p>
-<p class="p2"><span class="s2"></span><br></p>
-<p class="p3"><span class="s3">E&amp;A</span></p>
-<p class="p4"><span class="s2">Treatments Philosophy Book</span></p>
-<p class="p4"><span class="s2">Menu</span></p>
-<p class="p4"><span class="s2">Scottsdale / AZ</span></p>
-<p class="p4"><span class="s2">Scroll to Explore</span></p>
-<p class="p5"><span class="s2">Silverleaf, Arizona</span></p>
-<p class="p6"><span class="s2">EPOCH</span></p>
-<p class="p6"><span class="s2">&amp; AURA</span></p>
-<p class="p5"><span class="s2">Architectural Dermatology.<br>
-Restoring the geometry of youth under the desert sun.</span></p>
-<p class="p4"><span class="s2"><img src="file:///download.jpg" alt="download.jpg"></span></p>
-<p class="p4"><span class="s2">Fig. 01 Epidermal Clarity</span></p>
-<h2 style="margin: 0.0px 0.0px 14.9px 0.0px; font: 18.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">We do not simply<br>
-fill lines.</span></h2>
-<p class="p5"><span class="s2">True preservation is structural. It requires a rigorous, architectural approach to volume, light, and bone structure. We ignore trends. We focus on the physics of aging.</span></p>
-<p class="p8"><span class="s2">THE METHOD</span></p>
-<p class="p2"><span class="s2"></span><br></p>
-<p class="p5"><span class="s2">The Philosophy</span></p>
-<h3 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 14.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">"The desert creates beauty through resilience. We apply the same principle to skin."</span></h3>
-<h2 style="margin: 0.0px 0.0px 14.9px 0.0px; font: 18.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">Protocols</span></h2>
-<p class="p4"><span class="s2">Curated by Dr. Epoch</span></p>
-<p class="p4"><span class="s2"><img src="file:///download_1.jpg" alt="download_1.jpg"></span></p>
-<h4 style="margin: 0.0px 0.0px 16.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">Structural Reform</span></h4>
-<p class="p5"><span class="s2">Injectables / Volumizing</span></p>
-<p class="p5"><span class="s2">Restoring the deep fat pads and skeletal support lost to time. Subtle. Undetectable.</span></p>
-<p class="p4"><span class="s2"><img src="file:///photo-1616394584738-fc6e612e71b9.avif" alt="photo-1616394584738-fc6e612e71b9.avif"></span></p>
-<h4 style="margin: 0.0px 0.0px 16.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">Heat &amp; Light</span></h4>
-<p class="p5"><span class="s2">BBL Hero / Moxi / CO2</span></p>
-<p class="p5"><span class="s2">Using controlled thermal energy to force collagen synthesis and vaporize damage.</span></p>
-<p class="p4"><span class="s2"><img src="file:///photo-1512290923902-8a9f81dc236c.avif" alt="photo-1512290923902-8a9f81dc236c.avif"></span></p>
-<h4 style="margin: 0.0px 0.0px 16.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">The Regimen</span></h4>
-<p class="p5"><span class="s2">Booking</span></p>
-<p class="p5"><span class="s2">Consistency is the only magic. Monthly protocols to maintain epidermal glass-texture.</span></p>
-<h2 style="margin: 0.0px 0.0px 14.9px 0.0px; font: 18.0px 'Helvetica Neue'; color: #1f1d18; -webkit-text-stroke: #1f1d18"><span class="s2">EPOCH</span></h2>
-<p class="p5"><span class="s2">Defining the modern standard of desert aesthetic medicine. Where science meets sculpture.</span></p>
-<p class="p3"><span class="s4">Connect </span><span class="s3">Instagram</span><span class="s4"> </span><span class="s3">Concierge</span><span class="s4"> </span><span class="s3">Press</span></p>
-<p class="p4"><span class="s2">Locate Scottsdale, AZ Silverleaf Club By Appt Only</span></p>
-<p class="p8"><span class="s2">BOOK CONSULTATION</span></p>
-<p class="p4"><span class="s2">© 2024 Epoch &amp; Aura Site by Collective Mind Top</span></p>
+<body class="loading">
+
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+        <div class="loader-logo">EPOCH & AURA</div>
+    </div>
+
+    <!-- WEBGL BACKGROUND -->
+    <canvas id="webgl"></canvas>
+
+    <!-- UI LAYER -->
+    <div class="fixed top-0 left-0 w-full h-screen z-50 pointer-events-none flex flex-col justify-between p-8 md:p-12 box-border">
+        <!-- Top Nav -->
+        <div class="flex justify-between items-start pointer-events-auto w-full">
+            <a href="#" class="font-decorative text-xl md:text-2xl tracking-wider text-[#2A2620] hover:opacity-70 transition-opacity">E&A</a>
+            <div class="hidden md:flex gap-12 text-xs tracking-[0.25em] uppercase font-light text-[#2A2620]">
+                <a href="#protocols" class="nav-item">Treatments</a>
+                <a href="#philosophy" class="nav-item">Philosophy</a>
+                <a href="#book" class="nav-item">Book</a>
+            </div>
+            <div class="md:hidden text-xs uppercase tracking-widest pointer-events-auto relative">
+  <button
+    id="mobile-menu-toggle"
+    class="cursor-pointer"
+    onclick="document.getElementById('mobile-menu').classList.toggle('hidden'); document.body.classList.toggle('overflow-hidden');"
+  >
+    Menu
+  </button>
+
+  <div
+    id="mobile-menu"
+    class="hidden fixed inset-0 z-40 bg-[#F2F0E9] flex flex-col justify-between p-8 md:p-12"
+  >
+    <div class="flex justify-between items-start">
+      <a
+        href="#"
+        class="font-decorative text-xl md:text-2xl tracking-wider text-[#2A2620] hover:opacity-70 transition-opacity"
+      >
+        EA
+      </a>
+
+      <button
+        class="text-xs uppercase tracking-widest cursor-pointer"
+        onclick="document.getElementById('mobile-menu').classList.add('hidden'); document.body.classList.remove('overflow-hidden');"
+      >
+        Close
+      </button>
+    </div>
+
+    <nav class="mt-16 flex flex-col gap-6 text-xs tracking-[0.25em] uppercase font-light text-[#2A2620]">
+      <a
+        href="#protocols"
+        class="nav-item"
+        onclick="document.getElementById('mobile-menu').classList.add('hidden'); document.body.classList.remove('overflow-hidden');"
+      >
+        Treatments
+      </a>
+      <a
+        href="#philosophy"
+        class="nav-item"
+        onclick="document.getElementById('mobile-menu').classList.add('hidden'); document.body.classList.remove('overflow-hidden');"
+      >
+        Philosophy
+      </a>
+      <a
+        href="#book"
+        class="nav-item"
+        onclick="document.getElementById('mobile-menu').classList.add('hidden'); document.body.classList.remove('overflow-hidden');"
+      >
+        Book
+      </a>
+    </nav>
+  </div>
+</div>
+        </div>
+
+        <!-- Side Indicators -->
+        <div class="absolute top-1/2 left-12 -translate-y-1/2 -rotate-90 origin-left hidden md:block">
+            <span class="text-[9px] tracking-[0.4em] uppercase text-gray-500">Scottsdale / AZ</span>
+        </div>
+        <div class="absolute top-1/2 right-12 -translate-y-1/2 rotate-90 origin-right hidden md:block">
+             <span class="text-[9px] tracking-[0.4em] uppercase text-gray-500">Scroll to Explore</span>
+        </div>
+    </div>
+
+    <!-- SCROLL CONTENT -->
+    <main class="wrapper" id="main-content">
+        
+        <!-- HERO -->
+        <section class="min-h-screen flex items-center justify-center relative pt-20">
+            <div class="text-center z-10 px-4">
+                <p class="text-[10px] uppercase tracking-[0.4em] text-[#2A2620] font-bold mb-6 reveal-load">Silverleaf, Arizona</p>
+                <h1 class="font-display text-[13vw] md:text-[15vw] leading-[0.9] text-[#2A2620] mix-blend-darken">
+                    <div class="overflow-fix"><span class="block reveal-title">EPOCH</span></div>
+                    <div class="overflow-fix"><span class="block reveal-title italic font-light">& AURA</span></div>
+                </h1>
+                
+                <div class="mt-12 overflow-hidden">
+                    <p class="text-xs md:text-sm max-w-md mx-auto leading-relaxed text-gray-600 reveal-load">
+                        Architectural Dermatology.<br>
+                        Restoring the geometry of youth under the desert sun.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- IMAGE GRID 01 -->
+        <section class="container-fluid py-24 md:py-40" id="philosophy">
+            <div class="grid grid-cols-12 gap-8 items-end">
+                <div class="col-span-12 md:col-span-5">
+                    <div class="img-container h-[60vh] md:h-[80vh] w-full" data-scroll data-scroll-speed="1">
+                        <img src="https://unsplash.com/photos/oSHy8iUzMRk/download?force=true" alt="Skin Texture">
+                    </div>
+                    <div class="mt-4 flex justify-between text-[10px] uppercase tracking-widest text-gray-500 border-t border-gray-300 pt-2">
+                        <span>Fig. 01</span>
+                        <span>Epidermal Clarity</span>
+                    </div>
+                </div>
+                <div class="col-span-12 md:col-span-6 md:col-start-7 mb-20">
+                    <h2 class="font-display text-5xl md:text-7xl mb-8 leading-tight text-[#2A2620]">
+                        We do not simply<br><span class="italic text-[#B09B82]">fill lines.</span>
+                    </h2>
+                    <p class="text-sm md:text-base leading-loose text-gray-600 font-light max-w-lg mb-12">
+                        True preservation is structural. It requires a rigorous, architectural approach to volume, light, and bone structure. We ignore trends. We focus on the physics of aging.
+                    </p>
+                    <a href="#protocols" class="btn-arch">The Method</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FULL WIDTH TEXTURE BREAK -->
+        <section class="w-full py-40 bg-[#EAE8E1] relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')]"></div>
+            <p class="text-[10px] uppercase tracking-[0.5em] mb-8 text-[#B09B82]">The Philosophy</p>
+            <h3 class="font-display text-4xl md:text-6xl max-w-4xl leading-snug px-6 z-10 text-[#2A2620]">
+                "The desert creates beauty through <span class="italic">resilience</span>. We apply the same principle to skin."
+            </h3>
+        </section>
+
+        <!-- PROTOCOLS -->
+        <section class="container-fluid py-24 md:py-40" id="protocols">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-24 border-b border-[#2A2620] pb-6">
+                <h2 class="font-display text-6xl text-[#2A2620]">Protocols</h2>
+                <div class="text-right mt-4 md:mt-0">
+                    <div class="text-[10px] uppercase tracking-[0.3em] text-gray-500">Curated by Dr. Epoch</div>
+                </div>
+            </div>
+
+            <!-- ALIGNED GRID (Removed offsets, all top aligned) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <!-- Card 1 -->
+                <div class="protocol-card group cursor-pointer">
+                    <div class="img-container h-[50vh] mb-8 grayscale group-hover:grayscale-0">
+                        <img src="https://unsplash.com/photos/UDQdJRwSE8s/download?force=true" alt="Structural">
+                    </div>
+                    <div class="px-2">
+                        <h4 class="font-display text-3xl mb-3 text-[#2A2620] group-hover:italic transition-all">Structural Reform</h4>
+                        <p class="text-xs uppercase tracking-widest text-[#B09B82] mb-4 font-bold">Injectables / Volumizing</p>
+                        <p class="text-sm text-gray-500 font-light leading-relaxed">
+                            Restoring the deep fat pads and skeletal support lost to time. Subtle. Undetectable.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 2 (Aligned) -->
+                <div class="protocol-card group cursor-pointer">
+                    <div class="img-container h-[50vh] mb-8 grayscale group-hover:grayscale-0">
+                        <img src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070&auto=format&fit=crop" alt="Laser">
+                    </div>
+                    <div class="px-2">
+                        <h4 class="font-display text-3xl mb-3 text-[#2A2620] group-hover:italic transition-all">Heat & Light</h4>
+                        <p class="text-xs uppercase tracking-widest text-[#B09B82] mb-4 font-bold">BBL Hero / Moxi / CO2</p>
+                        <p class="text-sm text-gray-500 font-light leading-relaxed">
+                            Using controlled thermal energy to force collagen synthesis and vaporize damage.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="protocol-card group cursor-pointer">
+                    <div class="img-container h-[50vh] mb-8 grayscale group-hover:grayscale-0">
+                        <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=2070&auto=format&fit=crop" alt="Facial">
+                    </div>
+                    <div class="px-2">
+                        <h4 class="font-display text-3xl mb-3 text-[#2A2620] group-hover:italic transition-all">The Regimen</h4>
+                        <p class="text-xs uppercase tracking-widest text-[#B09B82] mb-4 font-bold">Booking</p>
+                        <p class="text-sm text-gray-500 font-light leading-relaxed">
+                            Consistency is the only magic. Monthly protocols to maintain epidermal glass-texture.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER (Compressed & Lightened) -->
+        <footer class="bg-[#2A2620] text-[#F2F0E9] pt-24 pb-10 px-6 md:px-20 mt-20" id="footer">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-20">
+                <div class="flex flex-col justify-between">
+                    <h2 class="font-display text-[12vw] leading-none mb-8 text-[#B09B82]">EPOCH</h2>
+                    <p class="text-sm font-light text-gray-400 max-w-sm">
+                        Defining the modern standard of desert aesthetic medicine. Where science meets sculpture.
+                    </p>
+                </div>
+                <div class="flex flex-col justify-between">
+                    <div class="grid grid-cols-2 gap-8 text-xs tracking-[0.2em] uppercase font-light text-gray-400">
+                        <div class="flex flex-col gap-6">
+                            <span class="text-white border-b border-gray-600 pb-2 mb-2 inline-block w-max">Connect</span>
+                            <a href="#" class="hover:text-[#B09B82] transition-colors">Instagram</a>
+                            <a href="#" class="hover:text-[#B09B82] transition-colors">Concierge</a>
+                            <a href="#" class="hover:text-[#B09B82] transition-colors">Press</a>
+                        </div>
+                        <div class="flex flex-col gap-6 text-right">
+                            <span class="text-white border-b border-gray-600 pb-2 mb-2 inline-block w-max ml-auto">Locate</span>
+                            <span>Scottsdale, AZ</span>
+                            <span>Silverleaf Club</span>
+                            <span>By Appt Only</span>
+                        </div>
+                    </div>
+                    <div class="mt-20 text-right scroll-mt-[40vh]" id="book">
+                        <a href="#" class="btn-arch border-gray-600 hover:bg-[#F2F0E9] hover:text-[#2A2620] hover:border-[#F2F0E9] text-gray-300">Book Consultation</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Compressed Bottom Bar -->
+            <div class="mt-12 border-t border-[#F2F0E9]/20 pt-6 text-[10px] uppercase tracking-widest text-gray-500 flex justify-between items-center">
+                <span>© 2024 Epoch & Aura</span>
+                <span class="hidden md:block">Site by Collective Mind</span>
+                <span class="md:hidden">Top</span>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- 1. SETUP ---
+        const config = {
+            bgColor: 0xF2F0E9,
+            noiseStrength: 0.12
+        };
+
+        // --- 2. LOADER ---
+        const loader = document.getElementById('loader');
+        const loaderLogo = document.querySelector('.loader-logo');
+        
+        window.addEventListener('load', () => {
+            const tl = gsap.timeline();
+            tl.to(loaderLogo, {
+                y: 0,
+                opacity: 1,
+                duration: 1,
+                ease: 'power3.out'
+            })
+            .to(loaderLogo, {
+                y: -20,
+                opacity: 0,
+                duration: 0.5,
+                delay: 0.5
+            })
+            .to(loader, {
+                height: 0,
+                duration: 1.2,
+                ease: 'expo.inOut'
+            })
+            .from('.reveal-title', {
+                yPercent: 120,
+                duration: 1.5,
+                stagger: 0.1,
+                ease: 'power4.out'
+            }, "-=0.8")
+            .from('.reveal-load', {
+                y: 20,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.2,
+                ease: 'power2.out'
+            }, "-=1");
+        });
+
+        // --- 3. LENIS SCROLL ---
+        if (typeof Lenis !== 'undefined') {
+            const lenis = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smooth: true,
+                direction: 'vertical',
+            });
+
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        }
+
+        // --- 4. WEBGL BACKGROUND (HEAT HAZE) ---
+        const canvas = document.querySelector('#webgl');
+        const scene = new THREE.Scene();
+        // Match background color of CSS
+        scene.background = new THREE.Color(config.bgColor);
+
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            alpha: false
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Shader for subtle grainy heat haze
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                uColor: { value: new THREE.Color(config.bgColor) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float uTime;
+                uniform vec2 uResolution;
+                uniform vec3 uColor;
+                varying vec2 vUv;
+
+                // Random Noise
+                float random(vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                }
+
+                // Value Noise
+                float noise(vec2 st) {
+                    vec2 i = floor(st);
+                    vec2 f = fract(st);
+                    float a = random(i);
+                    float b = random(i + vec2(1.0, 0.0));
+                    float c = random(i + vec2(0.0, 1.0));
+                    float d = random(i + vec2(1.0, 1.0));
+                    vec2 u = f * f * (3.0 - 2.0 * f);
+                    return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+                }
+
+                void main() {
+                    vec2 st = gl_FragCoord.xy / uResolution.xy;
+                    
+                    // Create slow moving cloud/haze pattern
+                    float n = noise(st * 3.0 + uTime * 0.05);
+                    n += noise(st * 6.0 - uTime * 0.05) * 0.5;
+                    
+                    // Mix background color with subtle noise
+                    vec3 color = uColor;
+                    
+                    // Add subtle grain
+                    float grain = random(st * uTime) * 0.08;
+                    
+                    // Combine: Background + Shadows from noise + Grain
+                    // We darken the stone color slightly in the noise valleys
+                    color -= (1.0 - n) * 0.05; 
+                    color -= grain;
+
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `
+        });
+
+        const plane = new THREE.Mesh(geometry, material);
+        scene.add(plane);
+
+        function animate(time) {
+            material.uniforms.uTime.value = time * 0.001;
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            renderer.setSize(w, h);
+            material.uniforms.uResolution.value.set(w, h);
+        });
+
+        // --- 5. SCROLL TRIGGERS ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Image Parallax
+        document.querySelectorAll('.img-container').forEach(container => {
+            const img = container.querySelector('img');
+            gsap.to(img, {
+                yPercent: 15,
+                ease: 'none',
+                scrollTrigger: {
+                    trigger: container,
+                    scrub: true
+                }
+            });
+        });
+
+        // Text Reveals
+        document.querySelectorAll('h2, h3, h4').forEach(text => {
+            gsap.from(text, {
+                y: 30,
+                opacity: 0,
+                duration: 1,
+                ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: text,
+                    start: 'top 85%'
+                }
+            });
+        });
+
+    </script>
 </body>
 </html>
