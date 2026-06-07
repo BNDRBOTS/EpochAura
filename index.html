@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPOCH & AURA | Scottsdale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EPOCH & AURA | Master Build | Scottsdale</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (Configured via Script for Custom Tokens) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Libraries -->
+    <!-- Core Libraries -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
         {
             "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/"
+                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.module.js"
             }
         }
     </script>
@@ -22,587 +21,919 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 
-    <!-- Fonts -->
+    <!-- Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Mulish:wght@200;300;400;500;700&display=swap" rel="stylesheet">
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stone: '#F4F3EF',  // Lighter, more premium travertine base
+                        ash: '#1C1B19',    // Deeper, cooler volcanic ash (near black)
+                        sand: '#C2B29A',   // Luminous wet sand
+                        clay: '#9B8A75',   // Mid-tone desert earth
+                        glass: 'rgba(28, 27, 25, 0.03)'
+                    },
+                    fontFamily: {
+                        sans: ['Mulish', 'sans-serif'],
+                        display: ['Playfair Display', 'serif'],
+                        deco: ['Cinzel Decorative', 'serif'],
+                    },
+                    letterSpacing: {
+                        'ultra-wide': '0.3em',
+                        'mega-wide': '0.5em',
+                    },
+                    transitionTimingFunction: {
+                        'expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slow': 'cubic-bezier(0.7, 0, 0.3, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
+        /* BASE & RESET */
         :root {
-            --stone: #F2F0E9; /* Travertine */
-            --ash: #2A2620; /* Volcanic Rock */
-            --sand: #B09B82; /* Wet Sand */
+            --cursor-size: 8px;
+            --cursor-border: 40px;
         }
-
+        
         body {
-            background-color: var(--stone);
-            color: var(--ash);
-            font-family: 'Mulish', sans-serif;
-            margin: 0;
-            padding: 0;
+            background-color: #F4F3EF;
+            color: #1C1B19;
             overflow-x: hidden;
+            overscroll-behavior: none;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .font-display { font-family: 'Playfair Display', serif; }
-        .font-decorative { font-family: 'Cinzel Decorative', serif; }
+        /* LENIS SCROLL FIXES */
+        html.lenis { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+        .lenis.lenis-scrolling iframe { pointer-events: none; }
 
-        /* WEBGL CANVAS (Background - Z-0) */
-        #webgl {
+        /* WEBGL LAYER */
+        #webgl-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
             z-index: 0;
-            opacity: 0.6;
             pointer-events: none;
+            opacity: 0.8;
             mix-blend-mode: multiply;
         }
 
-        /* MAIN CONTENT (Z-1) */
-        .wrapper {
-            position: relative;
-            z-index: 1; /* Content sits low so cursor (Z-9999) is always visible */
-        }
-
-        .container-fluid {
-            padding-left: 4vw;
-            padding-right: 4vw;
-        }
-
-        .overflow-fix {
-            overflow: hidden;
-            padding-bottom: 0.5em; 
-            margin-bottom: -0.5em;
-        }
-
-        /* IMAGES */
-        .img-container {
-            position: relative;
-            overflow: hidden;
-            background: #dcdad4;
-        }
-        .img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scale(1.0);
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        /* STRUCTURAL Z-INDEXING */
+        .layer-base { z-index: 1; position: relative; }
+        .layer-ui { z-index: 50; }
+        .layer-overlay { z-index: 100; }
         
-        /* CARD INTERACTIONS */
-        .protocol-card {
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        /* TYPOGRAPHY UTILS */
+        .text-split-wrap { overflow: hidden; display: inline-block; vertical-align: top; }
+        .text-split-inner { display: inline-block; will-change: transform; }
+
+        /* IMAGERY ARCHITECTURE */
+        .img-reveal-wrap {
+            position: relative;
+            overflow: hidden;
+            background: #E5E4DF;
+            clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+            will-change: clip-path;
         }
-        .protocol-card:hover {
-            transform: translateY(-10px);
-            z-index: 20;
-        }
-        .protocol-card:hover .img-container {
-            box-shadow: 0 25px 50px -12px rgba(42, 38, 32, 0.4); 
-        }
-        .protocol-card:hover .img-container img {
-            transform: scale(1.1);
+        .img-reveal-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transform: scale(1.2);
+            will-change: transform;
         }
 
-        /* NAV ITEM UNDERLINE */
-        .nav-item {
-            position: relative;
-            cursor: pointer; /* Fallback */
-            text-decoration: none;
-            color: var(--ash);
-            display: inline-block;
+        /* CUSTOM MAGNETIC CURSOR (DESKTOP) */
+        @media (hover: hover) and (pointer: fine) {
+            body { cursor: none; }
+            a, button, [data-cursor] { cursor: none; }
+            
+            .cursor-dot {
+                position: fixed; top: 0; left: 0;
+                width: var(--cursor-size); height: var(--cursor-size);
+                background: #1C1B19;
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 9999;
+                transition: background-color 0.3s ease;
+            }
+            .cursor-ring {
+                position: fixed; top: 0; left: 0;
+                width: var(--cursor-border); height: var(--cursor-border);
+                border: 1px solid rgba(28, 27, 25, 0.3);
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 9998;
+                transition: width 0.4s var(--tw-ease-expo), height 0.4s var(--tw-ease-expo), border-color 0.3s ease, background-color 0.3s ease;
+            }
+            
+            /* Inverted cursor states for dark sections */
+            .theme-dark .cursor-dot { background: #F4F3EF; }
+            .theme-dark .cursor-ring { border-color: rgba(244, 243, 239, 0.3); }
         }
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0%;
-            height: 1px;
-            background: var(--ash);
-            transition: width 0.4s ease;
-        }
-        .nav-item:hover::before {
-            width: 100%;
+        @media (hover: none) {
+            .cursor-dot, .cursor-ring { display: none !important; }
         }
 
         /* BUTTONS */
-        .btn-arch {
-            border: 1px solid var(--ash);
-            padding: 1rem 3rem;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            font-size: 0.7rem;
-            transition: all 0.4s ease;
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            color: var(--ash);
-            background: transparent;
-            cursor: pointer; /* Fallback */
-            text-decoration: none;
-        }
-        .btn-arch:hover {
-            background: var(--ash);
-            color: var(--stone);
-        }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar {
-            width: 0px;
-            background: transparent;
-        }
-
-        /* LOADER (Z-100) */
-        .loader {
-            position: fixed;
-            inset: 0;
-            background: #F2F0E9;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
+        .btn-magnetic {
+            display: inline-flex;
             align-items: center;
-            flex-direction: column;
+            justify-content: center;
+            padding: 1rem 2.5rem;
+            position: relative;
+            border: 1px solid rgba(28, 27, 25, 0.2);
+            border-radius: 100px; /* Pill shape */
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
             overflow: hidden;
+            transition: color 0.4s var(--tw-ease-expo), border-color 0.4s var(--tw-ease-expo);
         }
-        .loader-logo {
-            font-family: 'Cinzel Decorative', serif;
-            font-size: 2rem;
-            color: var(--ash);
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        /* CUSTOM CURSOR (Desktop Only) */
-        .cursor-dot,
-        .cursor-circle {
-            position: fixed;
-            top: 0;
-            left: 0;
-            transform: translate(-50%, -50%);
+        .btn-magnetic::before {
+            content: '';
+            position: absolute;
+            top: 100%; left: 0;
+            width: 100%; height: 100%;
+            background: #1C1B19;
             border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            display: none; /* Hidden by default */
+            transition: transform 0.6s var(--tw-ease-expo);
+            z-index: -1;
         }
-        .cursor-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--ash);
+        .btn-magnetic:hover {
+            color: #F4F3EF;
+            border-color: #1C1B19;
         }
-        .cursor-circle {
-            width: 30px;
-            height: 30px;
-            border: 1px solid var(--ash);
-            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        .btn-magnetic:hover::before {
+            transform: scale(2) translateY(-50%);
+            border-radius: 0;
         }
 
-        /* DESKTOP HOVER RULES */
-        @media (hover: hover) and (pointer: fine) {
-            body { cursor: none; }
-            a, button, .nav-item, .protocol-card, .btn-arch { cursor: none; }
-            .cursor-dot, .cursor-circle { display: block; }
+        .theme-dark .btn-magnetic {
+            border-color: rgba(244, 243, 239, 0.2);
+            color: #F4F3EF;
         }
+        .theme-dark .btn-magnetic::before { background: #F4F3EF; }
+        .theme-dark .btn-magnetic:hover { color: #1C1B19; border-color: #F4F3EF; }
 
-        /* MOBILE MENU (Z-60) */
-        #mobile-menu {
-            z-index: 60;
+        /* LOADER */
+        #loader {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
         }
+        
+        /* UTILS */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .line-mask { overflow: hidden; display: block; }
     </style>
 </head>
+
 <body class="loading">
 
-    <!-- LOADER -->
-    <div class="loader" id="loader">
-        <div class="loader-logo">EPOCH & AURA</div>
-    </div>
-
-    <!-- CUSTOM CURSOR (Hidden on Mobile via CSS) -->
+    <!-- CUSTOM CURSOR -->
     <div class="cursor-dot"></div>
-    <div class="cursor-circle"></div>
+    <div class="cursor-ring"></div>
+
+    <!-- LOADER (Z-100) -->
+    <div id="loader" class="fixed inset-0 bg-stone flex flex-col justify-center items-center layer-overlay z-[100]">
+        <div class="overflow-hidden">
+            <h1 class="font-deco text-4xl md:text-6xl text-ash tracking-widest loader-text origin-bottom">EPOCH & AURA</h1>
+        </div>
+        <div class="overflow-hidden mt-4">
+            <p class="font-sans text-[9px] uppercase tracking-mega-wide text-clay loader-subtext">Initializing Architecture</p>
+        </div>
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-black/10 overflow-hidden">
+            <div class="h-full bg-ash w-0 loader-progress"></div>
+        </div>
+    </div>
 
     <!-- WEBGL BACKGROUND -->
-    <canvas id="webgl"></canvas>
+    <div id="webgl-container"></div>
 
-    <!-- UI LAYER (Fixed - Z-50) -->
-    <div class="fixed top-0 left-0 w-full h-screen z-50 pointer-events-none flex flex-col justify-between p-8 md:p-12 box-border">
-        <!-- Top Nav -->
-        <div class="flex justify-between items-start pointer-events-auto w-full">
-            <a href="#" class="font-decorative text-xl md:text-2xl tracking-wider text-[#2A2620] hover:opacity-70 transition-opacity">E&A</a>
-            
-            <!-- Desktop Menu -->
-            <div class="hidden md:flex gap-12 text-xs tracking-[0.25em] uppercase font-light text-[#2A2620]">
-                <a href="#protocols" class="nav-item">Treatments</a>
-                <a href="#philosophy" class="nav-item">Philosophy</a>
-                <a href="#book" class="nav-item">Book</a>
-            </div>
-
-            <!-- Mobile Menu Button -->
-            <div class="md:hidden pointer-events-auto">
-                <button id="menu-open-btn" class="text-xs uppercase tracking-widest cursor-pointer px-4 py-2 -mr-4">
-                    Menu
-                </button>
-            </div>
-        </div>
-
-        <!-- Side Indicators -->
-        <div class="absolute top-1/2 left-12 -translate-y-1/2 -rotate-90 origin-left hidden md:block">
-            <span class="text-[9px] tracking-[0.4em] uppercase text-gray-500">Scottsdale / AZ</span>
-        </div>
-        <div class="absolute top-1/2 right-12 -translate-y-1/2 rotate-90 origin-right hidden md:block">
-             <span class="text-[9px] tracking-[0.4em] uppercase text-gray-500">Scroll to Explore</span>
-        </div>
-    </div>
-
-    <!-- MOBILE MENU OVERLAY (Moved outside UI container for safety - Z-60) -->
-    <div id="mobile-menu" class="hidden fixed inset-0 bg-[#F2F0E9] flex flex-col justify-between p-8 md:p-12">
-        <div class="flex justify-between items-start">
-            <a href="#" class="font-decorative text-xl md:text-2xl tracking-wider text-[#2A2620]">EA</a>
-            <button id="menu-close-btn" class="text-xs uppercase tracking-widest cursor-pointer px-4 py-2 -mr-4">
-                Close
-            </button>
-        </div>
-
-        <nav class="mt-16 flex flex-col gap-8 text-sm tracking-[0.25em] uppercase font-light text-[#2A2620]">
-            <a href="#protocols" class="mobile-link nav-item block">Treatments</a>
-            <a href="#philosophy" class="mobile-link nav-item block">Philosophy</a>
-            <a href="#book" class="mobile-link nav-item block">Book</a>
+    <!-- UI NAVIGATION (Fixed - Z-50) -->
+    <header class="fixed top-0 left-0 w-full p-6 md:p-10 flex justify-between items-start layer-ui pointer-events-none mix-blend-difference text-stone">
+        <!-- Logo -->
+        <a href="#" class="font-deco text-2xl tracking-widest pointer-events-auto hover:opacity-70 transition-opacity" data-cursor="-hidden">E&A</a>
+        
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex gap-16 font-sans text-[10px] uppercase tracking-ultra-wide pointer-events-auto">
+            <a href="#philosophy" class="relative group overflow-hidden" data-cursor="-opaque">
+                <span class="block transition-transform duration-500 group-hover:-translate-y-full">Philosophy</span>
+                <span class="block absolute top-full left-0 transition-transform duration-500 group-hover:-translate-y-full italic font-display lowercase text-xs">Ideology</span>
+            </a>
+            <a href="#protocols" class="relative group overflow-hidden" data-cursor="-opaque">
+                <span class="block transition-transform duration-500 group-hover:-translate-y-full">Protocols</span>
+                <span class="block absolute top-full left-0 transition-transform duration-500 group-hover:-translate-y-full italic font-display lowercase text-xs">Treatments</span>
+            </a>
+            <a href="#sanctuary" class="relative group overflow-hidden" data-cursor="-opaque">
+                <span class="block transition-transform duration-500 group-hover:-translate-y-full">Sanctuary</span>
+                <span class="block absolute top-full left-0 transition-transform duration-500 group-hover:-translate-y-full italic font-display lowercase text-xs">Location</span>
+            </a>
         </nav>
 
-        <div class="text-[10px] uppercase tracking-widest text-gray-500">
-            Scottsdale, AZ
+        <!-- Menu Toggle / Book -->
+        <div class="flex items-center gap-8 pointer-events-auto">
+            <a href="#booking" class="hidden md:flex btn-magnetic mix-blend-normal !border-stone text-stone" data-cursor="-hidden">Consultation</a>
+            <button class="font-sans text-[10px] uppercase tracking-ultra-wide group relative overflow-hidden h-4" id="menu-trigger" data-cursor="-opaque">
+                <span class="block transition-transform duration-500 group-hover:-translate-y-full">Menu</span>
+                <span class="block absolute top-full left-0 transition-transform duration-500 group-hover:-translate-y-full">Open</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- UI BORDERS / METADATA -->
+    <div class="fixed top-1/2 left-6 -translate-y-1/2 -rotate-90 origin-left hidden lg:block layer-ui pointer-events-none mix-blend-difference text-stone/50 font-sans text-[9px] uppercase tracking-mega-wide">
+        Silverleaf, Scottsdale AZ
+    </div>
+    <div class="fixed top-1/2 right-6 -translate-y-1/2 rotate-90 origin-right hidden lg:block layer-ui pointer-events-none mix-blend-difference text-stone/50 font-sans text-[9px] uppercase tracking-mega-wide">
+        Architectural Dermatology
+    </div>
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center layer-ui pointer-events-none mix-blend-difference text-stone">
+        <span class="font-sans text-[8px] uppercase tracking-mega-wide mb-4">Scroll to construct</span>
+        <div class="w-[1px] h-12 bg-stone/20 overflow-hidden relative">
+            <div class="absolute top-0 left-0 w-full h-full bg-stone scroll-indicator transform -translate-y-full"></div>
         </div>
     </div>
 
-    <!-- SCROLL CONTENT (Z-1) -->
-    <main class="wrapper" id="main-content">
-        
-        <!-- HERO -->
-        <section class="min-h-screen flex items-center justify-center relative pt-20">
-            <div class="text-center z-10 px-4">
-                <p class="text-[10px] uppercase tracking-[0.4em] text-[#2A2620] font-bold mb-6 reveal-load">Silverleaf, Arizona</p>
-                <h1 class="font-display text-[13vw] md:text-[15vw] leading-[0.9] text-[#2A2620] mix-blend-darken">
-                    <div class="overflow-fix"><span class="block reveal-title">EPOCH</span></div>
-                    <div class="overflow-fix"><span class="block reveal-title italic font-light">& AURA</span></div>
-                </h1>
-                
-                <div class="mt-12 overflow-hidden">
-                    <p class="text-xs md:text-sm max-w-md mx-auto leading-relaxed text-gray-600 reveal-load">
-                        Architectural Dermatology.<br>
-                        Restoring the geometry of youth under the desert sun.
-                    </p>
-                </div>
-            </div>
-        </section>
+    <!-- MAIN CONTENT -->
+    <main class="layer-base" id="smooth-wrapper">
+        <div id="smooth-content">
 
-        <!-- IMAGE GRID 01 -->
-        <section class="container-fluid py-24 md:py-40" id="philosophy">
-            <div class="grid grid-cols-12 gap-8 items-end">
-                <div class="col-span-12 md:col-span-5">
-                    <div class="img-container h-[60vh] md:h-[80vh] w-full" data-scroll data-scroll-speed="1">
-                        <img src="https://unsplash.com/photos/oSHy8iUzMRk/download?force=true" alt="Skin Texture">
+            <!-- HERO SECTION -->
+            <section class="relative w-full min-h-screen flex items-center justify-center pt-20 pb-10 px-4" id="hero">
+                <div class="w-full max-w-[90vw] mx-auto text-center flex flex-col items-center justify-center">
+                    
+                    <div class="overflow-hidden mb-8">
+                        <p class="font-sans text-[9px] md:text-xs uppercase tracking-mega-wide text-ash/60 font-bold hero-elem">
+                            Redefining the Geometry of Youth
+                        </p>
                     </div>
-                    <div class="mt-4 flex justify-between text-[10px] uppercase tracking-widest text-gray-500 border-t border-gray-300 pt-2">
-                        <span>Fig. 01</span>
-                        <span>Epidermal Clarity</span>
+
+                    <h1 class="font-display text-[15vw] md:text-[14vw] leading-[0.85] text-ash tracking-tight w-full flex flex-col items-center justify-center mb-8">
+                        <div class="line-mask w-full"><span class="block hero-title-word transform translate-y-full">EPOCH</span></div>
+                        <div class="line-mask w-full flex justify-center items-center gap-4 md:gap-10">
+                            <span class="block font-sans font-light text-2xl md:text-4xl lg:text-6xl text-clay hero-title-word transform translate-y-full">&</span>
+                            <span class="block italic font-light hero-title-word transform translate-y-full">AURA</span>
+                        </div>
+                    </h1>
+
+                    <div class="overflow-hidden w-full max-w-md mt-6">
+                        <p class="font-sans text-xs md:text-sm leading-relaxed text-ash/70 hero-elem text-justify" style="text-align-last: center;">
+                            We bypass the superficial. True preservation is a rigorous, architectural approach to volume, light, and bone structure beneath the desert sun.
+                        </p>
                     </div>
                 </div>
-                <div class="col-span-12 md:col-span-6 md:col-start-7 mb-20">
-                    <h2 class="font-display text-5xl md:text-7xl mb-8 leading-tight text-[#2A2620]">
-                        We do not simply<br><span class="italic text-[#B09B82]">fill lines.</span>
+            </section>
+
+            <!-- MANIFESTO / PINNED SEQUENCE -->
+            <section class="relative w-full bg-stone py-32 md:py-0" id="philosophy">
+                <!-- Mobile Only Simple Layout -->
+                <div class="md:hidden px-6 py-20 flex flex-col gap-12">
+                    <h2 class="font-display text-5xl leading-tight text-ash">
+                        We construct.<br><span class="italic text-clay">We do not inflate.</span>
                     </h2>
-                    <p class="text-sm md:text-base leading-loose text-gray-600 font-light max-w-lg mb-12">
-                        True preservation is structural. It requires a rigorous, architectural approach to volume, light, and bone structure. We ignore trends. We focus on the physics of aging.
+                    <p class="font-sans text-sm leading-loose text-ash/80">
+                        Aging is not merely a loss of elasticity; it is a structural collapse. The skeleton remodels, deep fat pads atrophy, and the foundation shifts. To treat the surface while ignoring the scaffold is a flawed methodology.
                     </p>
-                    <a href="#protocols" class="btn-arch">The Method</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- FULL WIDTH TEXTURE BREAK -->
-        <section class="w-full py-40 bg-[#EAE8E1] relative overflow-hidden flex flex-col items-center justify-center text-center">
-            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')]"></div>
-            <p class="text-[10px] uppercase tracking-[0.5em] mb-8 text-[#B09B82]">The Philosophy</p>
-            <h3 class="font-display text-4xl md:text-6xl max-w-4xl leading-snug px-6 z-10 text-[#2A2620]">
-                "The desert creates beauty through <span class="italic">resilience</span>. We apply the same principle to skin."
-            </h3>
-        </section>
-
-        <!-- PROTOCOLS -->
-        <section class="container-fluid py-24 md:py-40" id="protocols">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-24 border-b border-[#2A2620] pb-6">
-                <h2 class="font-display text-6xl text-[#2A2620]">Protocols</h2>
-                <div class="text-right mt-4 md:mt-0">
-                    <div class="text-[10px] uppercase tracking-[0.3em] text-gray-500">Curated by Dr. Epoch</div>
-                </div>
-            </div>
-
-            <!-- GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <!-- Card 1 -->
-                <div class="protocol-card group cursor-pointer">
-                    <div class="img-container h-[50vh] mb-8 grayscale group-hover:grayscale-0">
-                        <img src="https://unsplash.com/photos/UDQdJRwSE8s/download?force=true" alt="Structural">
-                    </div>
-                    <div class="px-2">
-                        <h4 class="font-display text-3xl mb-3 text-[#2A2620] group-hover:italic transition-all">Structural Reform</h4>
-                        <p class="text-xs uppercase tracking-widest text-[#B09B82] mb-4 font-bold">Injectables / Volumizing</p>
-                        <p class="text-sm text-gray-500 font-light leading-relaxed">
-                            Restoring the deep fat pads and skeletal support lost to time. Subtle. Undetectable.
-                        </p>
+                    <div class="w-full aspect-[3/4] img-reveal-wrap mobile-reveal">
+                        <img src="https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=2080&auto=format&fit=crop" alt="Structural Architecture">
                     </div>
                 </div>
 
-                <!-- Card 2 -->
-                <div class="protocol-card group cursor-pointer">
-                    <div class="img-container h-[50vh] mb-8 grayscale group-hover:grayscale-0">
-                        <img src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070&auto=format&fit=crop" alt="Laser">
-                    </div>
-                    <div class="px-2">
-                        <h4 class="font-display text-3xl mb-3 text-[#2A2620] group-hover:italic transition-all">Heat & Light</h4>
-                        <p class="text-xs uppercase tracking-widest text-[#B09B82] mb-4 font-bold">BBL Hero / Moxi / CO2</p>
-                        <p class="text-sm text-gray-500 font-light leading-relaxed">
-                            Using controlled thermal energy to force collagen synthesis and vaporize damage.
-                        </p>
-                    </div>
-                </div>
+                <!-- Desktop Pinned Sequence -->
+                <div class="hidden md:block w-full h-screen sticky top-0 overflow-hidden manifesto-container">
+                    <div class="absolute inset-0 flex items-center justify-between px-16 lg:px-24">
+                        
+                        <!-- Left: Dynamic Text -->
+                        <div class="w-[45%] h-full flex flex-col justify-center relative">
+                            <div class="overflow-hidden mb-12">
+                                <span class="font-sans text-[10px] uppercase tracking-mega-wide text-clay block manifesto-label">The Methodology</span>
+                            </div>
+                            
+                            <!-- State 1 -->
+                            <div class="absolute top-1/2 -translate-y-1/2 left-0 w-full manifesto-state" data-state="1">
+                                <h2 class="font-display text-5xl lg:text-7xl leading-tight text-ash mb-8">
+                                    We construct.<br><span class="italic text-sand">We do not inflate.</span>
+                                </h2>
+                                <p class="font-sans text-sm lg:text-base leading-relaxed text-ash/70 max-w-md">
+                                    Aging is a structural collapse. The skeleton remodels, deep fat pads atrophy. To treat the surface while ignoring the scaffold is fundamentally flawed.
+                                </p>
+                            </div>
 
-                <!-- Card 3 -->
-                <div class="protocol-card group cursor-pointer">
-                    <div class="img-container h-[50vh] mb-8 grayscale group-hover:grayscale-0">
-                        <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=2070&auto=format&fit=crop" alt="Facial">
-                    </div>
-                    <div class="px-2">
-                        <h4 class="font-display text-3xl mb-3 text-[#2A2620] group-hover:italic transition-all">The Regimen</h4>
-                        <p class="text-xs uppercase tracking-widest text-[#B09B82] mb-4 font-bold">Booking</p>
-                        <p class="text-sm text-gray-500 font-light leading-relaxed">
-                            Consistency is the only magic. Monthly protocols to maintain epidermal glass-texture.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer class="bg-[#2A2620] text-[#F2F0E9] pt-24 pb-10 px-6 md:px-20 mt-20 relative z-10" id="footer">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-20">
-                <div class="flex flex-col justify-between">
-                    <h2 class="font-display text-[12vw] leading-none mb-8 text-[#B09B82]">EPOCH</h2>
-                    <p class="text-sm font-light text-gray-400 max-w-sm">
-                        Defining the modern standard of desert aesthetic medicine. Where science meets sculpture.
-                    </p>
-                </div>
-                <div class="flex flex-col justify-between">
-                    <div class="grid grid-cols-2 gap-8 text-xs tracking-[0.2em] uppercase font-light text-gray-400">
-                        <div class="flex flex-col gap-6">
-                            <span class="text-white border-b border-gray-600 pb-2 mb-2 inline-block w-max">Connect</span>
-                            <a href="#" class="hover:text-[#B09B82] transition-colors">Instagram</a>
-                            <a href="#" class="hover:text-[#B09B82] transition-colors">Concierge</a>
-                            <a href="#" class="hover:text-[#B09B82] transition-colors">Press</a>
+                            <!-- State 2 -->
+                            <div class="absolute top-1/2 -translate-y-1/2 left-0 w-full manifesto-state opacity-0 pointer-events-none translate-y-8" data-state="2">
+                                <h2 class="font-display text-5xl lg:text-7xl leading-tight text-ash mb-8">
+                                    Physics over<br><span class="italic text-sand">trends.</span>
+                                </h2>
+                                <p class="font-sans text-sm lg:text-base leading-relaxed text-ash/70 max-w-md">
+                                    We analyze facial vectors, assessing vectors of light and shadow. We restore the native geometry before addressing the epidermal finish.
+                                </p>
+                            </div>
                         </div>
-                        <div class="flex flex-col gap-6 text-right">
-                            <span class="text-white border-b border-gray-600 pb-2 mb-2 inline-block w-max ml-auto">Locate</span>
-                            <span>Scottsdale, AZ</span>
-                            <span>Silverleaf Club</span>
-                            <span>By Appt Only</span>
+
+                        <!-- Right: Parallax Image Reveal -->
+                        <div class="w-[45%] h-[70vh] relative flex items-center justify-center">
+                            <div class="w-full h-full absolute top-0 right-0 img-reveal-wrap manifesto-img-1" data-cursor="-opaque">
+                                <img src="https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=2080&auto=format&fit=crop" alt="Structural Architecture" class="object-cover scale-110">
+                            </div>
+                            <div class="w-3/4 h-3/4 absolute top-1/2 -translate-y-1/2 right-12 img-reveal-wrap manifesto-img-2 z-10 clip-zero">
+                                <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=2070&auto=format&fit=crop" alt="Light and Shadow" class="object-cover scale-110">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- Transitional Sequence (Replaces the redundant blank spacer) -->
+                <div class="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden bg-stone border-t border-ash/5 transition-voyage">
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none">
+                        <h2 class="font-deco text-[20vw] leading-none text-ash/5 whitespace-nowrap transition-scale-text">PRESERVATION</h2>
+                    </div>
+                    <div class="relative z-10 text-center flex flex-col items-center mt-20">
+                        <div class="w-[1px] h-32 bg-ash/10 mb-8 overflow-hidden">
+                            <div class="w-full h-full bg-clay transition-line-drop transform -translate-y-full"></div>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="font-sans text-[9px] md:text-xs uppercase tracking-mega-wide text-ash/60 transition-fade-up">
+                                Descending into the Sanctuary
+                            </p>
                         </div>
                     </div>
-                    <div class="mt-20 text-right scroll-mt-[40vh]" id="book">
-                        <a href="#" class="btn-arch border-gray-600 hover:bg-[#F2F0E9] hover:text-[#2A2620] hover:border-[#F2F0E9] text-gray-300">Book Consultation</a>
+                </div>
+            </section>
+
+            <!-- SANCTUARY (Dark Theme Inversion) -->
+            <section class="w-full bg-ash text-stone py-32 md:py-48 px-6 md:px-16 lg:px-24 relative overflow-hidden" id="sanctuary" data-theme="dark">
+                <!-- Abstract dark noise overlay -->
+                <div class="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+                
+                <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-16 md:gap-0">
+                    <div class="w-full md:w-1/3">
+                        <p class="font-sans text-[10px] uppercase tracking-mega-wide text-clay mb-12 flex items-center gap-4">
+                            <span class="w-8 h-[1px] bg-clay block"></span>
+                            The Sanctuary
+                        </p>
+                        <h2 class="font-display text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-8 text-split-target">
+                            Silence <br><span class="italic font-light text-stone/70">the noise.</span>
+                        </h2>
+                        <p class="font-sans text-sm leading-relaxed text-stone/60 max-w-sm mb-12 sanctuary-text">
+                            Hidden within the enclaves of Silverleaf, Epoch & Aura is designed to disconnect you from the frenetic pace of Phoenix. A space defined by monolithic stone, diffused light, and absolute privacy.
+                        </p>
+                        <button class="btn-magnetic" data-cursor="-hidden">View Location</button>
+                    </div>
+
+                    <div class="w-full md:w-[55%] grid grid-cols-2 gap-4 md:gap-8">
+                        <div class="mt-0 md:mt-24 img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
+                            <img src="https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2069&auto=format&fit=crop" alt="Interior Architecture">
+                        </div>
+                        <div class="img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
+                            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop" alt="Abstract Light">
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="mt-12 border-t border-[#F2F0E9]/20 pt-6 text-[10px] uppercase tracking-widest text-gray-500 flex justify-between items-center">
-                <span>© 2024 Epoch & Aura</span>
-                <span class="hidden md:block">Site by Collective Mind</span>
-                <span class="md:hidden">Top</span>
-            </div>
-        </footer>
+            </section>
 
+            <!-- PROTOCOLS (Services) -->
+            <section class="w-full bg-stone py-32 md:py-48 px-6 md:px-16 lg:px-24" id="protocols">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-20 md:mb-32 border-b border-ash/20 pb-12 gap-8">
+                        <h2 class="font-display text-6xl md:text-8xl text-ash text-split-target tracking-tight">Protocols</h2>
+                        <p class="font-sans text-[10px] uppercase tracking-ultra-wide text-ash/50 text-right max-w-[200px] leading-loose">
+                            Precision interventions calibrated for longevity.
+                        </p>
+                    </div>
+
+                    <!-- Accordion/Grid Hybrid -->
+                    <div class="flex flex-col border-t border-ash/20 protocol-list">
+                        
+                        <!-- Item 01 -->
+                        <div class="protocol-item group border-b border-ash/20 py-10 md:py-16 relative flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer" data-cursor="-opaque">
+                            <div class="w-full md:w-[40%] pr-8">
+                                <span class="font-sans text-[9px] uppercase tracking-mega-wide text-clay mb-4 block group-hover:text-ash transition-colors">01 / Foundation</span>
+                                <h3 class="font-display text-3xl md:text-5xl text-ash mb-4 group-hover:italic transition-all duration-500">Structural Reform</h3>
+                                <p class="font-sans text-sm text-ash/60 leading-relaxed max-w-sm hidden md:block">
+                                    Deep volumetric restoration using advanced injectables. We rebuild the scaffold to support the soft tissue, ensuring results that are imperceptible yet profound.
+                                </p>
+                            </div>
+                            
+                            <!-- Hover Image Reveal (Desktop) -->
+                            <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-10 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                                <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?q=80&w=2070&auto=format&fit=crop" alt="Structural" class="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-1000">
+                            </div>
+
+                            <div class="w-full md:w-[25%] flex justify-end mt-6 md:mt-0">
+                                <span class="font-sans text-[10px] uppercase tracking-widest text-ash/50 group-hover:text-ash transition-colors border border-ash/20 rounded-full px-6 py-2 group-hover:border-ash">Biostimulators & HA</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 02 -->
+                        <div class="protocol-item group border-b border-ash/20 py-10 md:py-16 relative flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer" data-cursor="-opaque">
+                            <div class="w-full md:w-[40%] pr-8">
+                                <span class="font-sans text-[9px] uppercase tracking-mega-wide text-clay mb-4 block group-hover:text-ash transition-colors">02 / Resurface</span>
+                                <h3 class="font-display text-3xl md:text-5xl text-ash mb-4 group-hover:italic transition-all duration-500">Photonics & Heat</h3>
+                                <p class="font-sans text-sm text-ash/60 leading-relaxed max-w-sm hidden md:block">
+                                    Harnessing concentrated light and thermal energy to force collagen synthesis, vaporize sun damage, and polish the epidermal layer to a glass-like finish.
+                                </p>
+                            </div>
+                            
+                            <!-- Hover Image Reveal (Desktop) -->
+                            <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-10 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                                <img src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070&auto=format&fit=crop" alt="Laser" class="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-1000 grayscale group-hover:grayscale-0">
+                            </div>
+
+                            <div class="w-full md:w-[25%] flex justify-end mt-6 md:mt-0">
+                                <span class="font-sans text-[10px] uppercase tracking-widest text-ash/50 group-hover:text-ash transition-colors border border-ash/20 rounded-full px-6 py-2 group-hover:border-ash">BBL / Moxi / Halo</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 03 -->
+                        <div class="protocol-item group border-b border-ash/20 py-10 md:py-16 relative flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer" data-cursor="-opaque">
+                            <div class="w-full md:w-[40%] pr-8">
+                                <span class="font-sans text-[9px] uppercase tracking-mega-wide text-clay mb-4 block group-hover:text-ash transition-colors">03 / Maintenance</span>
+                                <h3 class="font-display text-3xl md:text-5xl text-ash mb-4 group-hover:italic transition-all duration-500">Cellular Regimen</h3>
+                                <p class="font-sans text-sm text-ash/60 leading-relaxed max-w-sm hidden md:block">
+                                    Clinical facials and medical-grade topical prescriptions designed to maintain cellular turnover and protect the architectural investments made in-clinic.
+                                </p>
+                            </div>
+                            
+                            <!-- Hover Image Reveal (Desktop) -->
+                            <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-10 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                                <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=2070&auto=format&fit=crop" alt="Facial" class="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-1000 grayscale group-hover:grayscale-0">
+                            </div>
+
+                            <div class="w-full md:w-[25%] flex justify-end mt-6 md:mt-0">
+                                <span class="font-sans text-[10px] uppercase tracking-widest text-ash/50 group-hover:text-ash transition-colors border border-ash/20 rounded-full px-6 py-2 group-hover:border-ash">Custom Topicals</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- FOOTER & BOOKING -->
+            <footer class="w-full bg-ash text-stone py-20 md:py-32 px-6 md:px-16 lg:px-24 relative overflow-hidden" id="booking" data-theme="dark">
+                <!-- Large Background Typography -->
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] text-center pointer-events-none mix-blend-overlay opacity-5">
+                    <h2 class="font-deco text-[30vw] leading-none whitespace-nowrap">AURA</h2>
+                </div>
+
+                <div class="max-w-7xl mx-auto relative z-10 flex flex-col gap-24">
+                    
+                    <!-- Call to action -->
+                    <div class="flex flex-col items-center text-center max-w-3xl mx-auto mb-10">
+                        <span class="font-sans text-[10px] uppercase tracking-mega-wide text-clay mb-8">Begin the Process</span>
+                        <h2 class="font-display text-4xl md:text-6xl lg:text-7xl mb-12 leading-tight">
+                            Secure your consultation.
+                        </h2>
+                        <button class="btn-magnetic bg-stone !text-ash hover:!text-stone hover:!border-stone" data-cursor="-hidden">
+                            Schedule Appointment
+                        </button>
+                    </div>
+
+                    <!-- Layout grid for links -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-0 pt-20 border-t border-stone/10">
+                        <div class="md:col-span-4 flex flex-col justify-between">
+                            <h3 class="font-deco text-3xl tracking-widest mb-6">E&A</h3>
+                            <p class="font-sans text-xs text-stone/50 max-w-[200px] leading-relaxed">
+                                Architectural Dermatology.<br>Scottsdale, AZ.
+                            </p>
+                        </div>
+
+                        <div class="md:col-span-3 flex flex-col gap-4 font-sans text-[10px] uppercase tracking-widest">
+                            <span class="text-stone/40 mb-2 border-b border-stone/10 pb-2 inline-block w-max">Menu</span>
+                            <a href="#philosophy" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Philosophy</a>
+                            <a href="#protocols" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Protocols</a>
+                            <a href="#sanctuary" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Sanctuary</a>
+                        </div>
+
+                        <div class="md:col-span-3 flex flex-col gap-4 font-sans text-[10px] uppercase tracking-widest">
+                            <span class="text-stone/40 mb-2 border-b border-stone/10 pb-2 inline-block w-max">Connect</span>
+                            <a href="#" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Instagram</a>
+                            <a href="#" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Concierge</a>
+                            <a href="#" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Patient Portal</a>
+                        </div>
+
+                        <div class="md:col-span-2 flex flex-col gap-4 font-sans text-[10px] uppercase tracking-widest text-right">
+                            <span class="text-stone/40 mb-2 border-b border-stone/10 pb-2 inline-block w-max ml-auto">Location</span>
+                            <span class="text-stone/70">Silverleaf Club</span>
+                            <span class="text-stone/70">Scottsdale, AZ</span>
+                            <span class="text-stone/70">By Appt Only</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-stone/10 font-sans text-[9px] uppercase tracking-mega-wide text-stone/40">
+                        <span>© 2026 Epoch & Aura</span>
+                        <span class="mt-4 md:mt-0">Engineered Architecture</span>
+                    </div>
+
+                </div>
+            </footer>
+
+        </div>
     </main>
 
-    <!-- SCRIPTS -->
     <script type="module">
         import * as THREE from 'three';
 
-        // --- 1. SETUP & LOADER ---
-        const loader = document.getElementById('loader');
-        const loaderLogo = document.querySelector('.loader-logo');
-        
-        window.addEventListener('load', () => {
-            const tl = gsap.timeline();
-            tl.to(loaderLogo, {
-                y: 0, opacity: 1, duration: 1, ease: 'power3.out'
-            })
-            .to(loaderLogo, {
-                y: -20, opacity: 0, duration: 0.5, delay: 0.5
-            })
-            .to(loader, {
-                height: 0, duration: 1.2, ease: 'expo.inOut',
-                onComplete: () => { loader.style.display = 'none'; }
-            })
-            .from('.reveal-title', {
-                yPercent: 120, duration: 1.5, stagger: 0.1, ease: 'power4.out'
-            }, "-=0.8")
-            .from('.reveal-load', {
-                y: 20, opacity: 0, duration: 1, stagger: 0.2, ease: 'power2.out'
-            }, "-=1");
-        });
-
-        // --- 2. MOBILE MENU LOGIC ---
-        const menuOpenBtn = document.getElementById('menu-open-btn');
-        const menuCloseBtn = document.getElementById('menu-close-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mobileLinks = document.querySelectorAll('.mobile-link');
-
-        function toggleMenu(show) {
-            if (show) {
-                mobileMenu.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-                gsap.fromTo(mobileMenu, {opacity: 0}, {opacity: 1, duration: 0.3});
-                gsap.fromTo('.mobile-link', 
-                    {y: 20, opacity: 0}, 
-                    {y: 0, opacity: 1, duration: 0.5, stagger: 0.1, delay: 0.1}
-                );
-            } else {
-                gsap.to(mobileMenu, {
-                    opacity: 0, 
-                    duration: 0.3, 
-                    onComplete: () => {
-                        mobileMenu.classList.add('hidden');
-                        document.body.style.overflow = '';
-                    }
+        /* ------------------------------------------------------------------------
+           1. UTILITIES: TEXT SPLITTER & MATH
+        ------------------------------------------------------------------------- */
+        function splitTextIntoSpans(selector) {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                const text = el.innerText;
+                const words = text.split(' ');
+                el.innerHTML = '';
+                words.forEach((word, wordIndex) => {
+                    const wordWrap = document.createElement('span');
+                    wordWrap.className = 'text-split-wrap';
+                    
+                    const wordInner = document.createElement('span');
+                    wordInner.className = 'text-split-inner';
+                    // Preserve original spacing
+                    wordInner.innerHTML = word + (wordIndex < words.length - 1 ? '&nbsp;' : '');
+                    
+                    wordWrap.appendChild(wordInner);
+                    el.appendChild(wordWrap);
                 });
-            }
+            });
         }
-
-        menuOpenBtn.addEventListener('click', () => toggleMenu(true));
-        menuCloseBtn.addEventListener('click', () => toggleMenu(false));
-        mobileLinks.forEach(link => link.addEventListener('click', () => toggleMenu(false)));
-
-        // --- 3. CUSTOM CURSOR (Desktop Only) ---
-        // Media query check handled in CSS, logic runs but elements hidden on mobile
-        const cursorDot = document.querySelector('.cursor-dot');
-        const cursorCircle = document.querySelector('.cursor-circle');
         
-        // Only attach listeners if device supports hover
+        // Execute split immediately
+        splitTextIntoSpans('.text-split-target');
+
+        const lerp = (a, b, n) => (1 - n) * a + n * b;
+        
+        // Ensure accurate dark theme detection for cursor inversion
+        const themeSections = document.querySelectorAll('[data-theme="dark"]');
+
+        /* ------------------------------------------------------------------------
+           2. CUSTOM MAGNETIC CURSOR
+        ------------------------------------------------------------------------- */
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        
+        let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let dotPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let ringPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        
+        let isHovering = false;
+        let isHidden = false;
+
         if (window.matchMedia("(hover: hover)").matches) {
             window.addEventListener('mousemove', (e) => {
-                gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.1 });
-                gsap.to(cursorCircle, { x: e.clientX, y: e.clientY, duration: 0.3 });
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+                
+                // Check theme context based on element under cursor
+                const elUnderCursor = document.elementFromPoint(mouse.x, mouse.y);
+                if(elUnderCursor) {
+                    const closestDark = elUnderCursor.closest('[data-theme="dark"]');
+                    if(closestDark) {
+                        document.body.classList.add('theme-dark');
+                    } else {
+                        document.body.classList.remove('theme-dark');
+                    }
+                }
             });
 
-            const hoverTargets = document.querySelectorAll('a, button, .protocol-card');
+            const renderCursor = () => {
+                // Smooth interpolation
+                dotPos.x = lerp(dotPos.x, mouse.x, 0.2);
+                dotPos.y = lerp(dotPos.y, mouse.y, 0.2);
+                ringPos.x = lerp(ringPos.x, mouse.x, 0.1);
+                ringPos.y = lerp(ringPos.y, mouse.y, 0.1);
+
+                if(!isHidden) {
+                    cursorDot.style.transform = `translate(-50%, -50%) translate3d(${dotPos.x}px, ${dotPos.y}px, 0)`;
+                    cursorRing.style.transform = `translate(-50%, -50%) translate3d(${ringPos.x}px, ${ringPos.y}px, 0)`;
+                }
+
+                requestAnimationFrame(renderCursor);
+            };
+            requestAnimationFrame(renderCursor);
+
+            // Magnetic / Hover targets
+            const hoverTargets = document.querySelectorAll('[data-cursor]');
             hoverTargets.forEach(target => {
-                target.addEventListener('mouseenter', () => {
-                    gsap.to(cursorCircle, { scale: 1.5, borderColor: '#B09B82', duration: 0.3 });
+                target.addEventListener('mouseenter', (e) => {
+                    const type = target.getAttribute('data-cursor');
+                    if(type === '-hidden') {
+                        isHidden = true;
+                        cursorDot.style.opacity = '0';
+                        cursorRing.style.opacity = '0';
+                    } else if (type === '-opaque') {
+                        cursorRing.style.width = '60px';
+                        cursorRing.style.height = '60px';
+                        // if dark theme, make ring filled white, else filled black
+                        if(document.body.classList.contains('theme-dark')){
+                             cursorRing.style.backgroundColor = 'rgba(244, 243, 239, 0.1)';
+                        } else {
+                             cursorRing.style.backgroundColor = 'rgba(28, 27, 25, 0.05)';
+                        }
+                    }
                 });
+                
                 target.addEventListener('mouseleave', () => {
-                    gsap.to(cursorCircle, { scale: 1, borderColor: '#2A2620', duration: 0.3 });
+                    isHidden = false;
+                    cursorDot.style.opacity = '1';
+                    cursorRing.style.opacity = '1';
+                    cursorRing.style.width = 'var(--cursor-border)';
+                    cursorRing.style.height = 'var(--cursor-border)';
+                    cursorRing.style.backgroundColor = 'transparent';
                 });
             });
         }
 
-        // --- 4. LENIS SCROLL ---
-        if (typeof Lenis !== 'undefined') {
-            const lenis = new Lenis({
-                duration: 1.2,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smooth: true,
-                direction: 'vertical',
+        /* ------------------------------------------------------------------------
+           3. LENIS SMOOTH SCROLLING
+        ------------------------------------------------------------------------- */
+        const lenis = new Lenis({
+            wrapper: document.body,
+            content: document.querySelector('#smooth-wrapper'),
+            duration: 1.5,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            orientation: 'vertical',
+            gestureOrientation: 'vertical',
+            smoothWheel: true,
+            wheelMultiplier: 1,
+            smoothTouch: false,
+            touchMultiplier: 2,
+            infinite: false,
+        });
+
+        // Integrate Lenis with GSAP ScrollTrigger
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+        gsap.ticker.lagSmoothing(0);
+
+
+        /* ------------------------------------------------------------------------
+           4. WEBGL FLUID TOPOGRAPHICAL SHADER
+        ------------------------------------------------------------------------- */
+        const initWebGL = () => {
+            const container = document.getElementById('webgl-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            
+            // Custom shader to create fluid, topographical contours (like sand/skin)
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    uScrollY: { value: 0 },
+                    uColorBg: { value: new THREE.Color('#F4F3EF') }, // stone
+                    uColorLine: { value: new THREE.Color('#C2B29A') } // sand
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float uTime;
+                    uniform vec2 uResolution;
+                    uniform float uScrollY;
+                    uniform vec3 uColorBg;
+                    uniform vec3 uColorLine;
+                    varying vec2 vUv;
+
+                    // 2D Random
+                    vec2 random2(vec2 st){
+                        st = vec2( dot(st,vec2(127.1,311.7)), dot(st,vec2(269.5,183.3)) );
+                        return -1.0 + 2.0*fract(sin(st)*43758.5453123);
+                    }
+
+                    // 2D Noise based on Morgan McGuire's
+                    float noise(vec2 st) {
+                        vec2 i = floor(st);
+                        vec2 f = fract(st);
+                        vec2 u = f*f*(3.0-2.0*f);
+                        return mix( mix( dot( random2(i + vec2(0.0,0.0) ), f - vec2(0.0,0.0) ),
+                                         dot( random2(i + vec2(1.0,0.0) ), f - vec2(1.0,0.0) ), u.x),
+                                    mix( dot( random2(i + vec2(0.0,1.0) ), f - vec2(0.0,1.0) ),
+                                         dot( random2(i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y);
+                    }
+
+                    void main() {
+                        // Normalize pixel coordinates (from 0 to 1)
+                        vec2 uv = gl_FragCoord.xy/uResolution.xy;
+                        // Adjust aspect ratio
+                        uv.x *= uResolution.x/uResolution.y;
+
+                        // Create organic movement based on time and scroll
+                        vec2 pos = uv * 3.0;
+                        pos.y += uScrollY * 0.5;
+                        
+                        // Layered noise
+                        float n = noise(pos + uTime * 0.05) * 0.5;
+                        n += noise(pos * 2.0 - uTime * 0.08) * 0.25;
+                        
+                        // Topographical contour lines
+                        float contour = fract(n * 8.0);
+                        float line = smoothstep(0.48, 0.52, contour) - smoothstep(0.52, 0.56, contour);
+                        
+                        // Mix colors
+                        vec3 finalColor = mix(uColorBg, uColorLine, line * 0.3); // Subtle blending
+                        
+                        gl_FragColor = vec4(finalColor, 1.0);
+                    }
+                `
             });
-            function raf(time) {
-                lenis.raf(time);
-                requestAnimationFrame(raf);
-            }
-            requestAnimationFrame(raf);
-        }
 
-        // --- 5. WEBGL BACKGROUND ---
-        const canvas = document.querySelector('#webgl');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xF2F0E9);
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
 
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        const renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            antialias: true,
-            alpha: false
-        });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            // Update Scroll Uniform
+            lenis.on('scroll', (e) => {
+                // Normalize scroll value roughly
+                material.uniforms.uScrollY.value = e.scroll / window.innerHeight;
+            });
 
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: 0 },
-                uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                uColor: { value: new THREE.Color(0xF2F0E9) }
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() { vUv = uv; gl_Position = vec4(position, 1.0); }
-            `,
-            fragmentShader: `
-                uniform float uTime;
-                uniform vec2 uResolution;
-                uniform vec3 uColor;
-                varying vec2 vUv;
-                float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
-                float noise(vec2 st) {
-                    vec2 i = floor(st); vec2 f = fract(st);
-                    float a = random(i); float b = random(i + vec2(1.0, 0.0));
-                    float c = random(i + vec2(0.0, 1.0)); float d = random(i + vec2(1.0, 1.0));
-                    vec2 u = f * f * (3.0 - 2.0 * f);
-                    return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-                }
-                void main() {
-                    vec2 st = gl_FragCoord.xy / uResolution.xy;
-                    float n = noise(st * 3.0 + uTime * 0.05);
-                    n += noise(st * 6.0 - uTime * 0.05) * 0.5;
-                    vec3 color = uColor;
-                    float grain = random(st * uTime) * 0.08;
-                    color -= (1.0 - n) * 0.05; 
-                    color -= grain;
-                    gl_FragColor = vec4(color, 1.0);
-                }
-            `
-        });
+            const render = (time) => {
+                material.uniforms.uTime.value = time * 0.001;
+                renderer.render(scene, camera);
+                requestAnimationFrame(render);
+            };
+            requestAnimationFrame(render);
 
-        const plane = new THREE.Mesh(geometry, material);
-        scene.add(plane);
+            window.addEventListener('resize', () => {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+            });
+        };
 
-        function animate(time) {
-            material.uniforms.uTime.value = time * 0.001;
-            renderer.render(scene, camera);
-            requestAnimationFrame(animate);
-        }
-        animate();
+        initWebGL();
 
-        window.addEventListener('resize', () => {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            renderer.setSize(w, h);
-            material.uniforms.uResolution.value.set(w, h);
-        });
-
-        // --- 6. SCROLL TRIGGERS ---
+        /* ------------------------------------------------------------------------
+           5. GSAP ANIMATIONS & SCROLLTRIGGERS
+        ------------------------------------------------------------------------- */
         gsap.registerPlugin(ScrollTrigger);
-        document.querySelectorAll('.img-container').forEach(container => {
-            const img = container.querySelector('img');
-            gsap.to(img, {
-                yPercent: 15, ease: 'none',
-                scrollTrigger: { trigger: container, scrub: true }
+
+        const initAnimations = () => {
+            // Loader Timeline
+            const tlLoader = gsap.timeline({
+                onComplete: () => {
+                    document.body.classList.remove('loading');
+                    initScrollTriggers(); // Init after layout settles
+                }
             });
-        });
-        document.querySelectorAll('h2, h3, h4').forEach(text => {
-            gsap.from(text, {
-                y: 30, opacity: 0, duration: 1, ease: 'power3.out',
-                scrollTrigger: { trigger: text, start: 'top 85%' }
-            });
-        });
+
+            tlLoader
+                .to('.loader-progress', { width: '100%', duration: 1.5, ease: 'expo.inOut' })
+                .to('.loader-text', { yPercent: -100, opacity: 0, duration: 0.8, ease: 'power3.in' }, '+=0.2')
+                .to('.loader-subtext', { yPercent: -100, opacity: 0, duration: 0.8, ease: 'power3.in' }, '<0.1')
+                .to('#loader', { clipPath: 'polygon(0 0, 100% 0, 100% 0%, 0 0%)', duration: 1.2, ease: 'expo.inOut' })
+                // Hero Reveal
+                .fromTo('.hero-title-word', 
+                    { yPercent: 120, rotationZ: 2 }, 
+                    { yPercent: 0, rotationZ: 0, duration: 1.5, stagger: 0.1, ease: 'expo.out' }, "-=0.6"
+                )
+                .fromTo('.hero-elem',
+                    { y: 30, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: 'power2.out' }, "-=1"
+                );
+
+            function initScrollTriggers() {
+                // Scroll Indicator Fade
+                gsap.to('.scroll-indicator', {
+                    yPercent: 100,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: '#hero',
+                        start: 'top top',
+                        end: 'bottom center',
+                        scrub: true
+                    }
+                });
+
+                // Desktop Pinned Manifesto Sequence
+                if(window.innerWidth > 768) {
+                    const manifestoTl = gsap.timeline({
+                        scrollTrigger: {
+                            trigger: '.manifesto-container',
+                            start: 'top top',
+                            end: '+=200%', // Match spacer height
+                            scrub: 1,
+                            pin: true,
+                        }
+                    });
+
+                    // Transition Text States
+                    manifestoTl
+                        .to('[data-state="1"]', { y: -30, opacity: 0, duration: 1 })
+                        .to('[data-state="2"]', { y: 0, opacity: 1, pointerEvents: 'auto', duration: 1 }, '<0.5')
+                        // Transition Images (Clip Path reveal over previous)
+                        .to('.clip-zero', { clipPath: 'polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)', duration: 1.5, ease: 'power2.inOut' }, '<-0.5');
+                }
+
+                // Transitional Sequence Animations
+                const transitionVoyage = document.querySelector('.transition-voyage');
+                if (transitionVoyage) {
+                    gsap.to('.transition-scale-text', {
+                        scale: 1.2,
+                        opacity: 0,
+                        scrollTrigger: {
+                            trigger: transitionVoyage,
+                            start: 'top bottom',
+                            end: 'bottom top',
+                            scrub: true
+                        }
+                    });
+                    gsap.to('.transition-line-drop', {
+                        yPercent: 200,
+                        ease: 'none',
+                        scrollTrigger: {
+                            trigger: transitionVoyage,
+                            start: 'top 80%',
+                            end: 'bottom 20%',
+                            scrub: true
+                        }
+                    });
+                    gsap.fromTo('.transition-fade-up',
+                        { yPercent: 100, opacity: 0 },
+                        { yPercent: 0, opacity: 1, duration: 1.2, ease: 'expo.out',
+                            scrollTrigger: {
+                                trigger: transitionVoyage,
+                                start: 'top 70%'
+                            }
+                        }
+                    );
+                }
+
+                // Global Image Reveals (Clip Path)
+                const imgReveals = document.querySelectorAll('.img-reveal-wrap');
+                imgReveals.forEach(wrap => {
+                    const img = wrap.querySelector('img');
+                    
+                    // The clip reveal
+                    gsap.to(wrap, {
+                        clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+                        duration: 1.5,
+                        ease: 'expo.inOut',
+                        scrollTrigger: {
+                            trigger: wrap,
+                            start: 'top 85%',
+                        }
+                    });
+
+                    // Subtle parallax inside the wrapper
+                    if(img) {
+                        gsap.fromTo(img, 
+                            { scale: 1.3, yPercent: -10 },
+                            { scale: 1.0, yPercent: 10, ease: 'none',
+                                scrollTrigger: {
+                                    trigger: wrap,
+                                    start: 'top bottom',
+                                    end: 'bottom top',
+                                    scrub: true
+                                }
+                            }
+                        );
+                    }
+                });
+
+                // Global Text Splits Stagger
+                const textTargets = document.querySelectorAll('.text-split-target');
+                textTargets.forEach(target => {
+                    const inners = target.querySelectorAll('.text-split-inner');
+                    gsap.fromTo(inners,
+                        { yPercent: 110, rotationZ: 3 },
+                        { yPercent: 0, rotationZ: 0, duration: 1.2, stagger: 0.04, ease: 'expo.out',
+                            scrollTrigger: {
+                                trigger: target,
+                                start: 'top 90%',
+                            }
+                        }
+                    );
+                });
+            }
+        };
+
+        // Initialize sequence after DOM loads completely
+        document.addEventListener('DOMContentLoaded', initAnimations);
 
     </script>
 </body>
