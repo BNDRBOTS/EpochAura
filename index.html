@@ -112,6 +112,9 @@
             transform: scale(1.2);
             will-change: transform;
         }
+        .img-reveal-wrap.clip-zero {
+            clip-path: polygon(100% 100%, 100% 100%, 100% 0%, 100% 0%);
+        }
 
         /* CUSTOM MAGNETIC CURSOR (DESKTOP) */
         @media (hover: hover) and (pointer: fine) {
@@ -176,11 +179,12 @@
             transition: transform 0.6s var(--tw-ease-expo);
             z-index: -1;
         }
-        .btn-magnetic:hover {
+        
+        .btn-magnetic:not(.bg-stone):hover {
             color: #F4F3EF;
             border-color: #1C1B19;
         }
-        .btn-magnetic:hover::before {
+        .btn-magnetic:not(.bg-stone):hover::before {
             transform: scale(2) translateY(-50%);
             border-radius: 0;
         }
@@ -190,9 +194,18 @@
             color: #F4F3EF;
         }
         .theme-dark .btn-magnetic::before { background: #F4F3EF; }
-        .theme-dark .btn-magnetic:hover { color: #1C1B19; border-color: #F4F3EF; }
+        .theme-dark .btn-magnetic:not(.bg-stone):hover { color: #1C1B19; border-color: #F4F3EF; }
         
-        .theme-dark .btn-magnetic.bg-stone::before { background: #1C1B19; }
+        /* Schedule Appointment Button Fixed Hover State */
+        .btn-magnetic.bg-stone {
+            transition: transform 0.4s var(--tw-ease-expo);
+        }
+        .btn-magnetic.bg-stone::before { 
+            display: none; 
+        }
+        .btn-magnetic.bg-stone:hover { 
+            transform: scale(1.05); 
+        }
 
         /* LOADER */
         #loader {
@@ -243,7 +256,7 @@
     <!-- UI NAVIGATION (Fixed - Z-50) -->
     <header class="fixed top-0 left-0 w-full p-6 md:p-10 flex justify-between items-start layer-ui pointer-events-none mix-blend-difference text-stone">
         <!-- Logo -->
-        <a href="#" class="font-deco text-2xl tracking-widest pointer-events-auto hover:opacity-70 transition-opacity" data-cursor="-hidden">E&A</a>
+        <a href="#" class="font-deco text-2xl tracking-widest pointer-events-auto hover:opacity-70 transition-opacity">E&A</a>
         
         <!-- Desktop Nav -->
         <nav class="hidden md:flex gap-16 font-sans text-[10px] uppercase tracking-ultra-wide pointer-events-auto">
@@ -300,7 +313,6 @@
                     </div>
 
                     <h1 class="font-display text-[15vw] md:text-[14vw] leading-[0.85] text-ash tracking-tight w-full flex flex-col items-center justify-center mb-8">
-                        <!-- Removed translate-y-full class. Using opacity-0 to reserve height box for Chrome -->
                         <div class="line-mask w-full"><span class="block hero-title-word opacity-0">EPOCH</span></div>
                         <div class="line-mask w-full flex justify-center items-center gap-4 md:gap-10">
                             <span class="block font-sans font-light text-2xl md:text-4xl lg:text-6xl text-clay hero-title-word opacity-0">&</span>
@@ -374,6 +386,7 @@
 
                     </div>
                 </div>
+
                 <!-- Transitional Sequence -->
                 <div class="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden bg-stone border-t border-ash/5 transition-voyage">
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none">
@@ -403,20 +416,23 @@
                             <span class="w-8 h-[1px] bg-clay block"></span>
                             The Sanctuary
                         </p>
-                        <h2 class="font-display text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-8 text-split-target opacity-0">
+                        <h2 class="font-display text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-8 text-split-target">
                             Silence <br><span class="italic font-light text-stone/70">the noise.</span>
                         </h2>
                         <p class="font-sans text-sm leading-relaxed text-stone/60 max-w-sm mb-12 sanctuary-text">
                             Hidden within the enclaves of Silverleaf, Epoch & Aura is designed to disconnect you from the frenetic pace of Phoenix. A space defined by monolithic stone, diffused light, and absolute privacy.
                         </p>
-                        <button class="btn-magnetic" data-cursor="-opaque">View Location</button>
+                        <button class="btn-magnetic" data-cursor="-opaque" onclick="document.querySelector('#booking').scrollIntoView({behavior: 'smooth'})">View Location</button>
                     </div>
-
-                    <div class="w-full md:w-[55%] grid grid-cols-2 gap-4 md:gap-8 z-0">
-                        <div class="mt-0 md:mt-24 img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
+                    
+                    <div class="w-full md:w-[60%] grid grid-cols-3 gap-4 md:gap-8 items-start z-0">
+                        <div class="mt-0 img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
+                            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop" alt="Sanctuary Placeholder">
+                        </div>
+                        <div class="mt-0 md:mt-12 img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
                             <img src="https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2069&auto=format&fit=crop" alt="Interior Architecture">
                         </div>
-                        <div class="img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
+                        <div class="mt-0 md:mt-24 img-reveal-wrap aspect-[3/4] sanctuary-img" data-cursor="-opaque">
                             <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop" alt="Abstract Light">
                         </div>
                     </div>
@@ -428,7 +444,7 @@
                 <div class="max-w-7xl mx-auto">
                     
                     <div class="flex flex-col md:flex-row justify-between items-end mb-20 md:mb-32 border-b border-ash/20 pb-12 gap-8 relative z-20">
-                        <h2 class="font-display text-6xl md:text-8xl text-ash text-split-target opacity-0 tracking-tight">Protocols</h2>
+                        <h2 class="font-display text-6xl md:text-8xl text-ash text-split-target tracking-tight">Protocols</h2>
                         <p class="font-sans text-[10px] uppercase tracking-ultra-wide text-ash/50 text-right max-w-[200px] leading-loose">
                             Precision interventions calibrated for longevity.
                         </p>
@@ -447,8 +463,8 @@
                                 </p>
                             </div>
                             
-                            <!-- Hover Image Reveal (Desktop) - Z-0 ensures it stays behind text -->
-                            <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-0 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                            <!-- Hover Image Reveal (Desktop) - Z-0 ensures it stays behind text, positioned correctly on right -->
+                            <div class="hidden md:block absolute top-1/2 right-[10%] lg:right-[15%] -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-0 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
                                 <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?q=80&w=2070&auto=format&fit=crop" alt="Structural" class="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-1000">
                             </div>
 
@@ -467,7 +483,7 @@
                                 </p>
                             </div>
                             
-                            <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-0 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                            <div class="hidden md:block absolute top-1/2 right-[10%] lg:right-[15%] -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-0 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
                                 <img src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070&auto=format&fit=crop" alt="Laser" class="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-1000 grayscale group-hover:grayscale-0">
                             </div>
 
@@ -486,7 +502,7 @@
                                 </p>
                             </div>
                             
-                            <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-0 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                            <div class="hidden md:block absolute top-1/2 right-[10%] lg:right-[15%] -translate-y-1/2 w-[300px] h-[400px] pointer-events-none z-0 overflow-hidden rounded-sm opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
                                 <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=2070&auto=format&fit=crop" alt="Facial" class="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-1000 grayscale group-hover:grayscale-0">
                             </div>
 
@@ -515,7 +531,7 @@
                         <h2 class="font-display text-4xl md:text-6xl lg:text-7xl mb-12 leading-tight">
                             Secure your consultation.
                         </h2>
-                        <button class="btn-magnetic bg-stone !text-ash hover:!text-stone hover:!border-stone" data-cursor="-opaque">
+                        <button class="btn-magnetic bg-stone !text-ash" data-cursor="-opaque">
                             Schedule Appointment
                         </button>
                     </div>
@@ -528,7 +544,7 @@
                                 Architectural Dermatology.<br>Scottsdale, AZ.
                             </p>
                         </div>
-
+                        
                         <div class="md:col-span-3 flex flex-col gap-4 font-sans text-[10px] uppercase tracking-widest">
                             <span class="text-stone/40 mb-2 border-b border-stone/10 pb-2 inline-block w-max">Menu</span>
                             <a href="#philosophy" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Philosophy</a>
@@ -571,19 +587,33 @@
         function splitTextIntoSpans(selector) {
             const elements = document.querySelectorAll(selector);
             elements.forEach(el => {
-                const text = el.innerText;
-                const words = text.split(' ');
-                el.innerHTML = '';
-                words.forEach((word, wordIndex) => {
-                    const wordWrap = document.createElement('span');
-                    wordWrap.className = 'text-split-wrap';
+                const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+                const textNodes = [];
+                while(walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
+                }
+                
+                textNodes.forEach(node => {
+                    const text = node.nodeValue;
+                    if (!text.trim()) return;
                     
-                    const wordInner = document.createElement('span');
-                    wordInner.className = 'text-split-inner opacity-0'; 
-                    wordInner.innerHTML = word + (wordIndex < words.length - 1 ? '&nbsp;' : '');
+                    const words = text.split(/(\s+)/);
+                    const fragment = document.createDocumentFragment();
                     
-                    wordWrap.appendChild(wordInner);
-                    el.appendChild(wordWrap);
+                    words.forEach(word => {
+                        if (!word.trim()) {
+                            fragment.appendChild(document.createTextNode(word));
+                            return;
+                        }
+                        const wordWrap = document.createElement('span');
+                        wordWrap.className = 'text-split-wrap';
+                        const wordInner = document.createElement('span');
+                        wordInner.className = 'text-split-inner opacity-0';
+                        wordInner.innerText = word;
+                        wordWrap.appendChild(wordInner);
+                        fragment.appendChild(wordWrap);
+                    });
+                    node.parentNode.replaceChild(fragment, node);
                 });
             });
         }
@@ -608,12 +638,19 @@
                 mouse.x = e.clientX;
                 mouse.y = e.clientY;
                 
-                // Theme Detection logic for inversion
-                const elUnderCursor = document.elementFromPoint(mouse.x, mouse.y);
-                if(elUnderCursor) {
-                    if (elUnderCursor.closest('.layer-ui')) return;
+                let targetEl = document.elementFromPoint(mouse.x, mouse.y);
+                if(targetEl) {
+                    if (targetEl.closest('.layer-ui')) {
+                        const originalEvents = targetEl.style.pointerEvents;
+                        targetEl.style.pointerEvents = 'none';
+                        const underlyingEl = document.elementFromPoint(mouse.x, mouse.y);
+                        targetEl.style.pointerEvents = originalEvents;
+                        if(underlyingEl) {
+                            targetEl = underlyingEl;
+                        }
+                    }
                     
-                    const closestDark = elUnderCursor.closest('[data-theme="dark"]');
+                    const closestDark = targetEl.closest('[data-theme="dark"]');
                     if(closestDark) {
                         document.body.classList.add('theme-dark');
                     } else {
@@ -637,7 +674,6 @@
             };
             requestAnimationFrame(renderCursor);
 
-            // Magnetic / Hover targets
             const hoverTargets = document.querySelectorAll('[data-cursor]');
             hoverTargets.forEach(target => {
                 target.addEventListener('mouseenter', (e) => {
@@ -680,8 +716,6 @@
            3. LENIS SMOOTH SCROLLING
         ------------------------------------------------------------------------- */
         const lenis = new Lenis({
-            wrapper: document.body,
-            content: document.querySelector('#smooth-wrapper'),
             duration: 1.5,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             orientation: 'vertical',
@@ -693,11 +727,19 @@
             infinite: false,
         });
 
-        // Integrate Lenis with GSAP ScrollTrigger
         lenis.on('scroll', ScrollTrigger.update);
         gsap.ticker.add((time) => { lenis.raf(time * 1000); });
         gsap.ticker.lagSmoothing(0);
 
+        document.getElementById('menu-trigger').addEventListener('click', () => {
+            lenis.scrollTo('#booking');
+        });
+
+        document.querySelectorAll('.protocol-item').forEach(item => {
+            item.addEventListener('click', () => {
+                lenis.scrollTo('#booking');
+            });
+        });
 
         /* ------------------------------------------------------------------------
            4. WEBGL FLUID TOPOGRAPHICAL SHADER
@@ -804,6 +846,7 @@
             const tlLoader = gsap.timeline({
                 onComplete: () => {
                     document.body.classList.remove('loading');
+                    document.getElementById('loader').style.display = 'none';
                     initScrollTriggers();
                 }
             });
@@ -844,7 +887,8 @@
                     }
                 });
 
-                if(window.innerWidth > 768) {
+                let mm = gsap.matchMedia();
+                mm.add("(min-width: 769px)", () => {
                     const manifestoTl = gsap.timeline({
                         scrollTrigger: {
                             trigger: '.manifesto-container',
@@ -859,7 +903,7 @@
                         .to('[data-state="1"]', { y: -30, opacity: 0, duration: 1 })
                         .to('[data-state="2"]', { y: 0, opacity: 1, pointerEvents: 'auto', duration: 1 }, '<0.5')
                         .to('.clip-zero', { clipPath: 'polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)', duration: 1.5, ease: 'power2.inOut' }, '<-0.5');
-                }
+                });
 
                 const transitionVoyage = document.querySelector('.transition-voyage');
                 if (transitionVoyage) {
@@ -894,7 +938,7 @@
                     );
                 }
 
-                const imgReveals = document.querySelectorAll('.img-reveal-wrap');
+                const imgReveals = document.querySelectorAll('.img-reveal-wrap:not(.clip-zero)');
                 imgReveals.forEach(wrap => {
                     const img = wrap.querySelector('img');
                     gsap.to(wrap, {
@@ -906,7 +950,7 @@
                             start: 'top 85%',
                         }
                     });
-
+                    
                     if(img) {
                         gsap.fromTo(img, 
                             { scale: 1.3, yPercent: -10 },
