@@ -139,8 +139,12 @@
                 transition: width 0.4s var(--tw-ease-expo), height 0.4s var(--tw-ease-expo), border-color 0.3s ease, background-color 0.3s ease;
             }
             
+            .cursor-dot.on-magnetic { background: #F4F3EF; }
+            
             /* Inverted cursor states for dark sections */
             .theme-dark .cursor-dot { background: #F4F3EF; }
+            .theme-dark .cursor-dot.on-magnetic { background: #1C1B19; }
+            .theme-dark .cursor-dot.on-magnetic-stone { background: #F4F3EF; }
             .theme-dark .cursor-ring { border-color: rgba(244, 243, 239, 0.3); }
         }
         @media (hover: none) {
@@ -187,6 +191,8 @@
         }
         .theme-dark .btn-magnetic::before { background: #F4F3EF; }
         .theme-dark .btn-magnetic:hover { color: #1C1B19; border-color: #F4F3EF; }
+        
+        .theme-dark .btn-magnetic.bg-stone::before { background: #1C1B19; }
 
         /* LOADER */
         #loader {
@@ -257,7 +263,7 @@
 
         <!-- Menu Toggle / Book -->
         <div class="flex items-center gap-8 pointer-events-auto">
-            <a href="#booking" class="hidden md:flex btn-magnetic mix-blend-normal !border-stone text-stone" data-cursor="-hidden">Consultation</a>
+            <a href="#booking" class="hidden md:flex btn-magnetic mix-blend-normal !border-stone text-stone" data-cursor="-opaque">Consultation</a>
             <button class="font-sans text-[10px] uppercase tracking-ultra-wide group relative overflow-hidden h-4" id="menu-trigger" data-cursor="-opaque">
                 <span class="block transition-transform duration-500 group-hover:-translate-y-full">Menu</span>
                 <span class="block absolute top-full left-0 transition-transform duration-500 group-hover:-translate-y-full">Open</span>
@@ -272,7 +278,7 @@
     <div class="fixed top-1/2 right-6 -translate-y-1/2 rotate-90 origin-right hidden lg:block layer-ui pointer-events-none mix-blend-difference text-stone/50 font-sans text-[9px] uppercase tracking-mega-wide">
         Architectural Dermatology
     </div>
-    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center layer-ui pointer-events-none mix-blend-difference text-stone">
+    <div id="scroll-prompt" class="fixed bottom-6 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center layer-ui pointer-events-none mix-blend-difference text-stone">
         <span class="font-sans text-[8px] uppercase tracking-mega-wide mb-4">Scroll to construct</span>
         <div class="w-[1px] h-12 bg-stone/20 overflow-hidden relative">
             <div class="absolute top-0 left-0 w-full h-full bg-stone scroll-indicator transform -translate-y-full"></div>
@@ -403,7 +409,7 @@
                         <p class="font-sans text-sm leading-relaxed text-stone/60 max-w-sm mb-12 sanctuary-text">
                             Hidden within the enclaves of Silverleaf, Epoch & Aura is designed to disconnect you from the frenetic pace of Phoenix. A space defined by monolithic stone, diffused light, and absolute privacy.
                         </p>
-                        <button class="btn-magnetic" data-cursor="-hidden">View Location</button>
+                        <button class="btn-magnetic" data-cursor="-opaque">View Location</button>
                     </div>
 
                     <div class="w-full md:w-[55%] grid grid-cols-2 gap-4 md:gap-8 z-0">
@@ -509,7 +515,7 @@
                         <h2 class="font-display text-4xl md:text-6xl lg:text-7xl mb-12 leading-tight">
                             Secure your consultation.
                         </h2>
-                        <button class="btn-magnetic bg-stone !text-ash hover:!text-stone hover:!border-stone" data-cursor="-hidden">
+                        <button class="btn-magnetic bg-stone !text-ash hover:!text-stone hover:!border-stone" data-cursor="-opaque">
                             Schedule Appointment
                         </button>
                     </div>
@@ -565,7 +571,6 @@
         function splitTextIntoSpans(selector) {
             const elements = document.querySelectorAll(selector);
             elements.forEach(el => {
-                // Ensure text is visibly hidden while splitting to prevent FOIT ghosting
                 const text = el.innerText;
                 const words = text.split(' ');
                 el.innerHTML = '';
@@ -574,8 +579,7 @@
                     wordWrap.className = 'text-split-wrap';
                     
                     const wordInner = document.createElement('span');
-                    wordInner.className = 'text-split-inner opacity-0'; // Start completely hidden
-                    // Preserve original spacing
+                    wordInner.className = 'text-split-inner opacity-0'; 
                     wordInner.innerHTML = word + (wordIndex < words.length - 1 ? '&nbsp;' : '');
                     
                     wordWrap.appendChild(wordInner);
@@ -607,6 +611,8 @@
                 // Theme Detection logic for inversion
                 const elUnderCursor = document.elementFromPoint(mouse.x, mouse.y);
                 if(elUnderCursor) {
+                    if (elUnderCursor.closest('.layer-ui')) return;
+                    
                     const closestDark = elUnderCursor.closest('[data-theme="dark"]');
                     if(closestDark) {
                         document.body.classList.add('theme-dark');
@@ -635,6 +641,13 @@
             const hoverTargets = document.querySelectorAll('[data-cursor]');
             hoverTargets.forEach(target => {
                 target.addEventListener('mouseenter', (e) => {
+                    if (target.classList.contains('btn-magnetic')) {
+                        cursorDot.classList.add('on-magnetic');
+                        if (target.classList.contains('bg-stone')) {
+                            cursorDot.classList.add('on-magnetic-stone');
+                        }
+                    }
+
                     const type = target.getAttribute('data-cursor');
                     if(type === '-hidden') {
                         isHidden = true;
@@ -652,6 +665,7 @@
                 });
                 
                 target.addEventListener('mouseleave', () => {
+                    cursorDot.classList.remove('on-magnetic', 'on-magnetic-stone');
                     isHidden = false;
                     cursorDot.style.opacity = '1';
                     cursorRing.style.opacity = '1';
@@ -785,7 +799,6 @@
         gsap.registerPlugin(ScrollTrigger);
 
         const initAnimations = () => {
-            // Split Text strictly after fonts load to guarantee dimensions
             splitTextIntoSpans('.text-split-target');
 
             const tlLoader = gsap.timeline({
@@ -800,7 +813,6 @@
                 .to('.loader-text', { yPercent: -100, opacity: 0, duration: 0.8, ease: 'power3.in' }, '+=0.2')
                 .to('.loader-subtext', { yPercent: -100, opacity: 0, duration: 0.8, ease: 'power3.in' }, '<0.1')
                 .to('#loader', { clipPath: 'polygon(0 0, 100% 0, 100% 0%, 0 0%)', duration: 1.2, ease: 'expo.inOut' })
-                // God-Mode Fix: Animate from autoAlpha: 0 and specific yPercent to preserve Box Model Heights
                 .fromTo('.hero-title-word', 
                     { yPercent: 120, rotationZ: 2, autoAlpha: 0 }, 
                     { yPercent: 0, rotationZ: 0, autoAlpha: 1, duration: 1.5, stagger: 0.1, ease: 'expo.out' }, "-=0.6"
@@ -811,7 +823,6 @@
                 );
 
             function initScrollTriggers() {
-                // Scroll Indicator Fade
                 gsap.to('.scroll-indicator', {
                     yPercent: 100,
                     ease: 'none',
@@ -822,14 +833,23 @@
                         scrub: true
                     }
                 });
+                gsap.to('#scroll-prompt', {
+                    opacity: 0,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: '#hero',
+                        start: 'top top',
+                        end: 'bottom center',
+                        scrub: true
+                    }
+                });
 
-                // Desktop Pinned Manifesto Sequence
                 if(window.innerWidth > 768) {
                     const manifestoTl = gsap.timeline({
                         scrollTrigger: {
                             trigger: '.manifesto-container',
                             start: 'top top',
-                            end: '+=120%', // Tightened to eradicate massive white void
+                            end: '+=120%', 
                             scrub: 1,
                             pin: true,
                         }
@@ -841,7 +861,6 @@
                         .to('.clip-zero', { clipPath: 'polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)', duration: 1.5, ease: 'power2.inOut' }, '<-0.5');
                 }
 
-                // Transitional Sequence Animations
                 const transitionVoyage = document.querySelector('.transition-voyage');
                 if (transitionVoyage) {
                     gsap.to('.transition-scale-text', {
@@ -875,7 +894,6 @@
                     );
                 }
 
-                // Global Image Reveals (Clip Path)
                 const imgReveals = document.querySelectorAll('.img-reveal-wrap');
                 imgReveals.forEach(wrap => {
                     const img = wrap.querySelector('img');
@@ -904,7 +922,6 @@
                     }
                 });
 
-                // Global Text Splits Stagger (Fixed with autoAlpha for bounding boxes)
                 const textTargets = document.querySelectorAll('.text-split-target');
                 textTargets.forEach(target => {
                     const inners = target.querySelectorAll('.text-split-inner');
@@ -919,7 +936,6 @@
                     );
                 });
                 
-                // Refresh trigger map post-load to secure layout calculation
                 ScrollTrigger.refresh();
             }
         };
@@ -928,7 +944,6 @@
            6. SECURE BOOTSTRAP PROTOCOL (Neutralizes Thread/Font Freezes)
         ------------------------------------------------------------------------- */
         const bootstrapArchitecture = () => {
-            // Await Fonts & Micro-tick for layout to prevent Chrome FOIT Bounding Box collapse
             Promise.all([
                 document.fonts.ready,
                 new Promise(resolve => setTimeout(resolve, 50)) 
@@ -936,7 +951,6 @@
                 initAnimations();
             });
 
-            // Sandbox WebGL Thread so a ThreeJS CDN failure cannot halt the UI
             try {
                 initWebGL();
             } catch(e) {
