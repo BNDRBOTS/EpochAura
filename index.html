@@ -229,6 +229,14 @@
         display: block;
         will-change: transform, opacity;
     }
+
+    /* Mobile: expand the clip box so the italic AURA glyphs are not cut off */
+    @media (max-width: 767px) {
+        #hero .line-mask {
+            padding: 0.16em 0.3em;
+            margin: -0.16em -0.3em;
+        }
+    }
 </style>
 </head>
 <body class="loading">
@@ -388,7 +396,7 @@
             </div>
 
             <!-- Transitional Sequence -->
-            <div class="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden bg-stone border-t border-ash/5 transition-voyage">
+            <div class="w-full h-[55vh] md:h-[60vh] flex flex-col items-center justify-center relative overflow-hidden bg-stone border-t border-ash/5 transition-voyage">
                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none">
                     <h2 class="font-deco text-[20vw] leading-none text-ash/5 whitespace-nowrap transition-scale-text">PRESERVATION</h2>
                 </div>
@@ -559,8 +567,8 @@
                         <a href="#" class="hover:text-clay transition-colors w-max" data-cursor="-opaque">Patient Portal</a>
                     </div>
 
-                    <div class="md:col-span-2 flex flex-col gap-4 font-sans text-[10px] uppercase tracking-widest text-right">
-                        <span class="text-stone/40 mb-2 border-b border-stone/10 pb-2 inline-block w-max ml-auto">Location</span>
+                    <div class="md:col-span-2 flex flex-col gap-4 font-sans text-[10px] uppercase tracking-widest md:text-right">
+                        <span class="text-stone/40 mb-2 border-b border-stone/10 pb-2 inline-block w-max md:ml-auto">Location</span>
                         <span class="text-stone/70">Silverleaf Club</span>
                         <span class="text-stone/70">Scottsdale, AZ</span>
                         <span class="text-stone/70">By Appt Only</span>
@@ -752,7 +760,7 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         container.appendChild(renderer.domElement);
 
         const geometry = new THREE.PlaneGeometry(2, 2);
