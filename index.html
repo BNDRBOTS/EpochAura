@@ -230,11 +230,13 @@
         will-change: transform, opacity;
     }
 
-    /* Mobile: expand the clip box so the italic AURA glyphs are not cut off */
+    /* Mobile: the radial corner mask + tight leading clipped the italic AURA foot (bottom-left). Drop the mask here and add bottom clip room. */
     @media (max-width: 767px) {
         #hero .line-mask {
-            padding: 0.16em 0.3em;
-            margin: -0.16em -0.3em;
+            -webkit-mask-image: none;
+            mask-image: none;
+            padding-bottom: 0.3em;
+            margin-bottom: -0.3em;
         }
     }
 </style>
